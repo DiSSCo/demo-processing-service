@@ -11,11 +11,6 @@ Parameters should be supplied as environmental arguments.
 Application is expected to run as a docker container or kubernetes job.
 Running als commandline application will require code changes (when providing the properties for the envs).
 
-### Application properties
-kafka.host=localhost:9092
-kafka.group=naturalis-6
-kafka.topic=naturalis-3
-
 ### Cordra parameters
 `cordra.username` This parameter needs to be the username of a user with sufficient authorization to create objects   
 `cordra.password` Password of the Cordra user  
