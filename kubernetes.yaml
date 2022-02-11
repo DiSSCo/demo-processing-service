@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-processing-service
+  labels:
+    app: demo-processing-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-processing-service
+  template:
+    metadata:
+      labels:
+        app: demo-processing-service
+    spec:
+      containers:
+        - name: demo-processing-service
+          image: leeflangjs/demo-processing-service:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: cordra.host
+              value:
+            - name: cordra.username
+              value:
+            - name: cordra.password
+              value:
+            - name: kafka.host
+              value:
+            - name: kafka.group
+              value:
+            - name: kafka.topic
+              value:
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+
