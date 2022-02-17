@@ -40,7 +40,7 @@ public class CordraService {
                 saveItem(json);
             } else {
                 var existingObject = mapper.readValue(existingObjectOptional.get().content.toString(),
-                        Authoritative.class);
+                        OpenDSWrapper.class);
                 if (existingObject.equals(object)) {
                     log.debug("Objects are equal, no action needed");
                 } else {
