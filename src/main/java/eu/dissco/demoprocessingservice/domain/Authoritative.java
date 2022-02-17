@@ -2,7 +2,6 @@ package eu.dissco.demoprocessingservice.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.List;
 import lombok.Data;
 
 @Data
