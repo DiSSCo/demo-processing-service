@@ -24,6 +24,4 @@ public class Authoritative {
   String materialType;
   @JsonProperty("ods:name")
   String name;
-  @JsonProperty("ods:images")
-  List<Image> images;
 }

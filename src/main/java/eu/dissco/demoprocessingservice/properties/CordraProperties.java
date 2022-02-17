@@ -19,4 +19,7 @@ public class CordraProperties {
   @NotBlank
   private String password;
 
+  @NotBlank
+  private String type;
+
 }
