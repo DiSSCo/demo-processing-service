@@ -1,0 +1,7 @@
+{
+  "access_token": "Test-Token",
+  "token_type": "Bearer",
+  "active": true,
+  "userId": "userId",
+  "username": "user"
+}

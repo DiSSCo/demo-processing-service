@@ -15,8 +15,10 @@
 	<description>Processing Service demo</description>
 	<properties>
 		<java.version>17</java.version>
-		<cordra-client.version>2.3.2</cordra-client.version>
+		<cordra-client.version>2.4.0</cordra-client.version>
 		<doip-sdk.version>2.1.0</doip-sdk.version>
+		<spring-cloud-starter-openfeign.version>3.1.0</spring-cloud-starter-openfeign.version>
+		<feign-okhttp.version>11.8</feign-okhttp.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -63,6 +65,16 @@
 			<groupId>com.networknt</groupId>
 			<artifactId>json-schema-validator</artifactId>
 			<version>1.0.66</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-openfeign</artifactId>
+			<version>${spring-cloud-starter-openfeign.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.openfeign</groupId>
+			<artifactId>feign-okhttp</artifactId>
+			<version>${feign-okhttp.version}</version>
 		</dependency>
 
 		<dependency>
