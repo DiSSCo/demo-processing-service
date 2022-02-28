@@ -21,10 +21,11 @@ public class KafkaService {
 
   @KafkaListener(topics = "${kafka.topic}")
   public void getMessages(@Payload List<String> messages) {
+    log.info("Received batch of: {} for kafka", messages.size());
     var futures = new ArrayList<CompletableFuture<OpenDSWrapper>>();
     messages.forEach(message -> futures.add(cordraService.processItem(message)));
-    var results = futures.stream().map(CompletableFuture::join).filter(Objects::nonNull).toList();
-    cordraSendService.commitUpsertObject(results);
+    var stream = futures.stream().map(CompletableFuture::join).filter(Objects::nonNull).toList();
+    cordraSendService.commitUpsertObject(stream);
   }
 
 }

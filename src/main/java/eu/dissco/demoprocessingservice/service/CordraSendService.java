@@ -48,7 +48,7 @@ public class CordraSendService {
     try {
       var success = mapper.readTree(response).get("success").asBoolean();
       if (success) {
-        log.info("Successfully commit: {} objects", upsertObjects.size());
+        log.info("Successfully committed: {} objects", upsertObjects.size());
       } else {
         log.warn(response);
       }
