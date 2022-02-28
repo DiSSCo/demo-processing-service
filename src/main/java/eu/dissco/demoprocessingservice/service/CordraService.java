@@ -3,6 +3,7 @@ package eu.dissco.demoprocessingservice.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonParser;
+import eu.dissco.demoprocessingservice.client.CordraFeign;
 import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
 import eu.dissco.demoprocessingservice.exception.JsonValidationException;
 import eu.dissco.demoprocessingservice.exception.SchemaValidationException;
@@ -11,10 +12,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.cnri.cordra.api.CordraClient;
-import net.cnri.cordra.api.CordraException;
-import net.cnri.cordra.api.CordraObject;
-import net.cnri.cordra.api.QueryParams;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +20,7 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class CordraService {
 
-  private final CordraClient cordraClient;
+  private final CordraFeign cordraFeign;
   private final ObjectMapper mapper;
   private final ValidationService validationService;
   private final CordraProperties properties;
@@ -32,25 +29,23 @@ public class CordraService {
   public CompletableFuture<OpenDSWrapper> processItem(String message) {
     try {
       var object = mapper.readValue(message, OpenDSWrapper.class);
+      object.setType(properties.getType());
       var existingObjectOptional = findExisting(
           object.getAuthoritative().getPhysicalSpecimenId());
       if (existingObjectOptional.isEmpty()) {
         validate(message);
         return CompletableFuture.completedFuture(object);
       } else {
-        var existingObject = mapper.readValue(existingObjectOptional.get().content.toString(),
-            OpenDSWrapper.class);
+        var existingObject = existingObjectOptional.get();
         if (existingObject.equals(object)) {
-          log.info("Objects are equal, no action needed");
+          log.debug("Objects are equal, no action needed");
         } else {
-          log.info("Objects are not equal, update existing object");
+          log.debug("Objects are not equal, update existing object");
           // TODO: Update logic
         }
       }
     } catch (JsonProcessingException e) {
       log.error("Unable to parse object: {}", message, e);
-    } catch (CordraException e) {
-      log.error("Unable to check Cordra for object: {}", message, e);
     } catch (SchemaValidationException e) {
       log.error("Unable to validate message: {}", message, e);
     }
@@ -73,13 +68,21 @@ public class CordraService {
     }
   }
 
-  private Optional<CordraObject> findExisting(String physicalSpecimenId) throws CordraException {
-    var result = cordraClient.search(
-        "\\@type:\"" + properties.getType()
-            + "\" AND /ods\\:authoritative/ods\\:physicalSpecimenId:\""
-            + physicalSpecimenId + "\"",
-        new QueryParams(0, 1));
-    return result.stream().findFirst();
+  private Optional<OpenDSWrapper> findExisting(String physicalSpecimenId)
+      throws JsonProcessingException {
+    if (physicalSpecimenId == null) {
+      return Optional.empty();
+    }
+    // TODO escape all necessary parameters
+    var escapedPhysicalSpecimenId = physicalSpecimenId.replace("\\", "\\\\");
+    var query = "type:\"" + properties.getType() + "\" AND " +
+        "/ods\\:authoritative/ods\\:physicalSpecimenId:\"" + escapedPhysicalSpecimenId + "\"";
+    var result = cordraFeign.search(query);
+    var firstResult = mapper.readTree(result).get("results").get(0);
+    if (firstResult == null || firstResult.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(mapper.treeToValue(firstResult.get("content"), OpenDSWrapper.class));
   }
 
 }

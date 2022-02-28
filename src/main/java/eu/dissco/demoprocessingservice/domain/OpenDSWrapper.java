@@ -13,5 +13,7 @@ public class OpenDSWrapper {
   List<Image> images;
   @JsonProperty("sourceId")
   String sourceId;
+  @JsonProperty("@type")
+  String type;
 
 }
