@@ -41,6 +41,9 @@ public class CordraSendService {
     contentNode.put("@type", properties.getType());
     object.put("type", properties.getType());
     object.set("content", contentNode);
+    if (content.getId() != null){
+      object.put("id", content.getId());
+    }
     return object;
   }
 

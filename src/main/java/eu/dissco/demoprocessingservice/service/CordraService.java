@@ -1,6 +1,7 @@
 package eu.dissco.demoprocessingservice.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonParser;
 import eu.dissco.demoprocessingservice.client.CordraFeign;
@@ -24,6 +25,7 @@ public class CordraService {
   private final ObjectMapper mapper;
   private final ValidationService validationService;
   private final CordraProperties properties;
+  private final KafkaPublishService kafkaPublishService;
 
   @Async
   public CompletableFuture<OpenDSWrapper> processItem(String message) {
@@ -34,14 +36,20 @@ public class CordraService {
           object.getAuthoritative().getPhysicalSpecimenId());
       if (existingObjectOptional.isEmpty()) {
         validate(message);
+        if (object.getImages() != null && !object.getImages().isEmpty()) {
+          kafkaPublishService.sendMessage(object, "images");
+        }
         return CompletableFuture.completedFuture(object);
       } else {
-        var existingObject = existingObjectOptional.get();
+        var existingObject = mapper.treeToValue(existingObjectOptional.get().get("content"),
+            OpenDSWrapper.class);
         if (existingObject.equals(object)) {
           log.debug("Objects are equal, no action needed");
         } else {
           log.debug("Objects are not equal, update existing object");
-          // TODO: Update logic
+          validate(message);
+          object.setId(existingObjectOptional.get().get("id").asText());
+          return CompletableFuture.completedFuture(object);
         }
       }
     } catch (JsonProcessingException e) {
@@ -68,7 +76,7 @@ public class CordraService {
     }
   }
 
-  private Optional<OpenDSWrapper> findExisting(String physicalSpecimenId)
+  private Optional<JsonNode> findExisting(String physicalSpecimenId)
       throws JsonProcessingException {
     if (physicalSpecimenId == null) {
       return Optional.empty();
@@ -82,7 +90,7 @@ public class CordraService {
     if (firstResult == null || firstResult.isEmpty()) {
       return Optional.empty();
     }
-    return Optional.of(mapper.treeToValue(firstResult.get("content"), OpenDSWrapper.class));
+    return Optional.of(firstResult);
   }
 
 }
