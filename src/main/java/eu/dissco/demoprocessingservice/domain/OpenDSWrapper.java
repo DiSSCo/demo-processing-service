@@ -1,5 +1,6 @@
 package eu.dissco.demoprocessingservice.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
@@ -9,14 +10,16 @@ import lombok.Data;
 public class OpenDSWrapper {
 
   @JsonProperty("ods:authoritative")
-  Authoritative authoritative;
+  private Authoritative authoritative;
   @JsonProperty("ods:images")
-  List<Image> images;
+  private List<Image> images;
   @JsonProperty("sourceId")
-  String sourceId;
+  private String sourceId;
   @JsonProperty("ods:unmapped")
   private JsonNode unmapped;
   @JsonProperty("@type")
-  String type;
+  private String type;
+  @JsonIgnore
+  private String id;
 
 }

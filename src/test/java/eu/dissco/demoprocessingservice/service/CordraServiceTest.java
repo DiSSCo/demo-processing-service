@@ -32,12 +32,14 @@ class CordraServiceTest {
   private CordraProperties properties;
   @Mock
   private CordraFeign cordraFeign;
+  @Mock
+  private KafkaPublishService kafkaPublishService;
   private CordraService service;
   private JsonSchema schema;
 
   @BeforeEach
   void setup() throws IOException {
-    this.service = new CordraService(cordraFeign, mapper, validationService, properties);
+    this.service = new CordraService(cordraFeign, mapper, validationService, properties, kafkaPublishService);
     var factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V201909);
     this.schema = factory.getSchema(loadResourceFile("schema.json"));
   }
@@ -79,13 +81,19 @@ class CordraServiceTest {
     // Given
     var message = loadResourceFile("test-object.json");
     given(cordraFeign.search(anyString())).willReturn(loadResourceFile("test-search-unequal.json"));
+    given(validationService.retrieveSchema(anyString())).willReturn(schema);
+    given(properties.getType()).willReturn("ODStypeV0.2-Test");
 
     // When
     var result = service.processItem(message);
 
     // Then
+    var messageNode = (ObjectNode) mapper.readTree(message);
+    messageNode.put("@type", "ODStypeV0.2-Test");
+    var expected = mapper.treeToValue(messageNode, OpenDSWrapper.class);
+    expected.setId("test/eab36efab0bf0e60dfe0");
     then(cordraFeign).shouldHaveNoMoreInteractions();
-    assertThat(result.get()).isNull();
+    assertThat(result.get()).isEqualTo(expected);
   }
 
   @Test
