@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.demoprocessingservice.client.CordraFeign;
 import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
 import eu.dissco.demoprocessingservice.properties.CordraProperties;
+import eu.dissco.demoprocessingservice.repository.CordraRepository;
 import java.io.IOException;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,11 +34,11 @@ class CondraSendServiceTest {
   @Mock
   private CordraProperties properties;
 
-  private CordraSendService cordraSendService;
+  private CordraRepository cordraSendService;
 
   @BeforeEach
   void setup() {
-    cordraSendService = new CordraSendService(mapper, properties, cordraFeign);
+    cordraSendService = new CordraRepository(mapper, properties, cordraFeign);
   }
 
   @Test
@@ -52,7 +53,7 @@ class CondraSendServiceTest {
     var result = getJsonObject(object);
 
     // When
-    cordraSendService.commitUpsertObject(List.of(object));
+    cordraSendService.saveItems(List.of(object));
 
     // Then
     then(cordraFeign).should().postCordraObjects(eq(result), eq("Bearer Test-Token"));
@@ -68,7 +69,7 @@ class CondraSendServiceTest {
         loadResourceFile(filename));
 
     // When
-    cordraSendService.commitUpsertObject(List.of(object));
+    cordraSendService.saveItems(List.of(object));
 
     // Then
     then(cordraFeign).shouldHaveNoMoreInteractions();

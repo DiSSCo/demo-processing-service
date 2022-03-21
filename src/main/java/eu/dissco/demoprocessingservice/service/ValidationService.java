@@ -3,15 +3,18 @@ package eu.dissco.demoprocessingservice.service;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
+import eu.dissco.demoprocessingservice.Profiles;
 import eu.dissco.demoprocessingservice.exception.MissingSchemaException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.cnri.cordra.api.*;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@Profile(Profiles.CORDRA)
 @AllArgsConstructor
 public class ValidationService {
 

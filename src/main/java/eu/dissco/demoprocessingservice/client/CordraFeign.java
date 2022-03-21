@@ -2,12 +2,15 @@ package eu.dissco.demoprocessingservice.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import eu.dissco.demoprocessingservice.Profiles;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 
+@Profile(Profiles.CORDRA)
 @FeignClient(name = "cordra", url = "${cordra.host}")
 public interface CordraFeign {
 

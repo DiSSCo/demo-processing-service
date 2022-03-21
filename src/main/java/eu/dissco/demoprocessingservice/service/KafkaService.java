@@ -1,6 +1,7 @@
 package eu.dissco.demoprocessingservice.service;
 
 import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
+import eu.dissco.demoprocessingservice.repository.ProcessingRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,8 +17,8 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class KafkaService {
 
-  private final CordraService cordraService;
-  private final CordraSendService cordraSendService;
+  private final ProcessingService cordraService;
+  private final ProcessingRepository repository;
 
   @KafkaListener(topics = "${kafka.topic}")
   public void getMessages(@Payload List<String> messages) {
@@ -25,7 +26,12 @@ public class KafkaService {
     var futures = new ArrayList<CompletableFuture<OpenDSWrapper>>();
     messages.forEach(message -> futures.add(cordraService.processItem(message)));
     var stream = futures.stream().map(CompletableFuture::join).filter(Objects::nonNull).toList();
-    cordraSendService.commitUpsertObject(stream);
+    if (stream.isEmpty()){
+      log.info("No items need to be updated");
+    } else{
+      repository.saveItems(stream);
+    }
+    log.info("Successfully processed message: {}", messages.size());
   }
 
 }

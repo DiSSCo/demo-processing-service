@@ -22,6 +22,10 @@ public class KafkaProperties {
   private String topic;
 
   @Positive
-  private int batchSize = 1000;
+  private int batchSize = 10000;
+
+  private int numberOfPartitions = 4;
+
+  private short numberOfReplications = 1;
 
 }

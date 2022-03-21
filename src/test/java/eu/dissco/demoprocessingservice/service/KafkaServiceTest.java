@@ -8,6 +8,7 @@ import static org.mockito.BDDMockito.then;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
+import eu.dissco.demoprocessingservice.repository.CordraRepository;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -23,9 +24,9 @@ class KafkaServiceTest {
   private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
 
   @Mock
-  private CordraService cordraService;
+  private ProcessingService cordraService;
   @Mock
-  private CordraSendService cordraSendService;
+  private CordraRepository cordraSendService;
 
   private KafkaService service;
 
@@ -47,7 +48,7 @@ class KafkaServiceTest {
     service.getMessages(List.of(message));
 
     // Then
-    then(cordraSendService).should().commitUpsertObject(eq(List.of(openDS)));
+    then(cordraSendService).should().saveItems(eq(List.of(openDS)));
   }
 
   @Test
@@ -63,7 +64,7 @@ class KafkaServiceTest {
     service.getMessages(List.of(message));
 
     // Then
-    then(cordraSendService).should().commitUpsertObject(eq(List.of()));
+    then(cordraSendService).shouldHaveNoInteractions();
   }
 
 
