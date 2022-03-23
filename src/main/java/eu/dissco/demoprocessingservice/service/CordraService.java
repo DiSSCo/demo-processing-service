@@ -3,7 +3,7 @@ package eu.dissco.demoprocessingservice.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.demoprocessingservice.client.CordraFeign;
 import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
 import eu.dissco.demoprocessingservice.exception.JsonValidationException;
@@ -27,30 +27,17 @@ public class CordraService {
   private final CordraProperties properties;
   private final KafkaPublishService kafkaPublishService;
 
-  @Async
-  public CompletableFuture<OpenDSWrapper> processItem(String message) {
+  @Async("processingThreadPoolTaskExecutor")
+  public CompletableFuture<JsonNode> processItem(String message) {
     try {
       var object = mapper.readValue(message, OpenDSWrapper.class);
       object.setType(properties.getType());
       var existingObjectOptional = findExisting(
           object.getAuthoritative().getPhysicalSpecimenId());
       if (existingObjectOptional.isEmpty()) {
-        validate(message);
-        if (object.getImages() != null && !object.getImages().isEmpty()) {
-          kafkaPublishService.sendMessage(object, "images");
-        }
-        return CompletableFuture.completedFuture(object);
+        return processNewObject(message, object);
       } else {
-        var existingObject = mapper.treeToValue(existingObjectOptional.get().get("content"),
-            OpenDSWrapper.class);
-        if (existingObject.equals(object)) {
-          log.debug("Objects are equal, no action needed");
-        } else {
-          log.debug("Objects are not equal, update existing object");
-          validate(message);
-          object.setId(existingObjectOptional.get().get("id").asText());
-          return CompletableFuture.completedFuture(object);
-        }
+        return processExistingObject(message, object, existingObjectOptional.get());
       }
     } catch (JsonProcessingException e) {
       log.error("Unable to parse object: {}", message, e);
@@ -60,16 +47,42 @@ public class CordraService {
     return CompletableFuture.completedFuture(null);
   }
 
-  private void validate(String message)
-      throws SchemaValidationException, JsonProcessingException {
-    var jsonObject = JsonParser.parseString(message).getAsJsonObject();
-    jsonObject.addProperty("@type", properties.getType());
-    validateJson(jsonObject.toString());
+  private CompletableFuture<JsonNode> processNewObject(String message,
+      OpenDSWrapper object) throws SchemaValidationException, JsonProcessingException {
+    var json = validate(message);
+    if (object.getImages() != null && !object.getImages().isEmpty()) {
+      kafkaPublishService.sendMessage(object, "images");
+    }
+    return CompletableFuture.completedFuture(wrapJson(json, null));
   }
 
-  private void validateJson(String json) throws SchemaValidationException, JsonProcessingException {
+  private CompletableFuture<JsonNode> processExistingObject(String message,
+      OpenDSWrapper object, JsonNode existingObjectOptional)
+      throws JsonProcessingException, SchemaValidationException {
+    var existingObject = mapper.treeToValue(existingObjectOptional.get("content"),
+        OpenDSWrapper.class);
+    if (existingObject.equals(object)) {
+      log.debug("Objects are equal, no action needed");
+      return CompletableFuture.completedFuture(null);
+    } else {
+      log.debug("Objects are not equal, update existing object");
+      var json = validate(message);
+      return CompletableFuture.completedFuture(
+          wrapJson(json, existingObjectOptional.get("id")));
+    }
+  }
+
+  private ObjectNode validate(String message)
+      throws SchemaValidationException, JsonProcessingException {
+    var contentNode = (ObjectNode) mapper.readTree(message);
+    contentNode.put("@type", properties.getType());
+    validateJson(contentNode);
+    return contentNode;
+  }
+
+  private void validateJson(ObjectNode json) throws SchemaValidationException {
     var schema = validationService.retrieveSchema(properties.getType());
-    var errors = schema.validate(mapper.readTree(json));
+    var errors = schema.validate(json);
     if (!errors.isEmpty()) {
       errors.forEach(error -> log.error("Schema validation failed with error: {}", error));
       throw new JsonValidationException("Failed to validate Json");
@@ -91,6 +104,18 @@ public class CordraService {
       return Optional.empty();
     }
     return Optional.of(firstResult);
+  }
+
+  private ObjectNode wrapJson(ObjectNode content, JsonNode id) {
+    var object = mapper.createObjectNode();
+    var contentNode = (ObjectNode) mapper.valueToTree(content);
+    contentNode.put("@type", properties.getType());
+    object.put("type", properties.getType());
+    object.set("content", contentNode);
+    if (id != null) {
+      object.set("id", id);
+    }
+    return object;
   }
 
 }

@@ -1,7 +1,5 @@
 package eu.dissco.demoprocessingservice.service;
 
-import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -22,10 +20,16 @@ public class KafkaService {
   @KafkaListener(topics = "${kafka.topic}")
   public void getMessages(@Payload List<String> messages) {
     log.info("Received batch of: {} for kafka", messages.size());
-    var futures = new ArrayList<CompletableFuture<OpenDSWrapper>>();
-    messages.forEach(message -> futures.add(cordraService.processItem(message)));
-    var stream = futures.stream().map(CompletableFuture::join).filter(Objects::nonNull).toList();
-    cordraSendService.commitUpsertObject(stream);
+    var list = messages.stream()
+        .map(cordraService::processItem)
+        .map(CompletableFuture::join)
+        .filter(Objects::nonNull).toList();
+    log.info("Checked batch of: {} Items to upset: {}", list.size(), list.size());
+    if (list.isEmpty()) {
+      log.info("No records left after processing");
+    } else {
+      cordraSendService.commitUpsertObject(list);
+    }
   }
 
 }

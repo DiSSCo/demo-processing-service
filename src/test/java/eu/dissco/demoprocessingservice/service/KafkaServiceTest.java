@@ -7,7 +7,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -38,24 +37,21 @@ class KafkaServiceTest {
   void testGetMessages() throws IOException {
     // Given
     var message = loadResourceFile("test-object.json");
-    var openDS = mapper.readValue(message,
-        OpenDSWrapper.class);
+    var json = mapper.readTree(loadResourceFile("test-object-full.json"));
     given(cordraService.processItem(anyString())).willReturn(
-        CompletableFuture.completedFuture(openDS));
+        CompletableFuture.completedFuture(json));
 
     // When
     service.getMessages(List.of(message));
 
     // Then
-    then(cordraSendService).should().commitUpsertObject(eq(List.of(openDS)));
+    then(cordraSendService).should().commitUpsertObject(eq(List.of(json)));
   }
 
   @Test
   void testNoMessages() throws IOException {
     // Given
     var message = loadResourceFile("test-object.json");
-    var openDS = mapper.readValue(message,
-        OpenDSWrapper.class);
     given(cordraService.processItem(anyString())).willReturn(
         CompletableFuture.completedFuture(null));
 
@@ -63,8 +59,7 @@ class KafkaServiceTest {
     service.getMessages(List.of(message));
 
     // Then
-    then(cordraSendService).should().commitUpsertObject(eq(List.of()));
+    then(cordraSendService).shouldHaveNoInteractions();
   }
-
 
 }

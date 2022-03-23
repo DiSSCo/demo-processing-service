@@ -27,7 +27,7 @@ public class KafkaPublishService {
 
         @Override
         public void onSuccess(SendResult<String, String> result) {
-          log.info("Message successfully send to: {}", topic);
+          log.debug("Message successfully send to: {}", topic);
         }
 
         @Override
