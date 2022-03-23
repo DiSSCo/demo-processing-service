@@ -7,11 +7,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.demoprocessingservice.client.CordraFeign;
-import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
 import eu.dissco.demoprocessingservice.properties.CordraProperties;
 import java.io.IOException;
 import java.util.List;
@@ -43,16 +43,14 @@ class CondraSendServiceTest {
   @Test
   void testSendMessages() throws IOException {
     // Given
-    var objectString = loadResourceFile("test-object.json");
-    var object = mapper.readValue(objectString, OpenDSWrapper.class);
+    var json = givenJson("test-object.json");
     given(cordraFeign.authenticate(any())).willReturn(loadResourceFile("auth-response.json"));
     given(cordraFeign.postCordraObjects(any(), anyString())).willReturn(
         loadResourceFile("upsert-response.json"));
-    given(properties.getType()).willReturn("OpenDSType");
-    var result = getJsonObject(object);
+    var result = getJsonObject(json);
 
     // When
-    cordraSendService.commitUpsertObject(List.of(object));
+    cordraSendService.commitUpsertObject(List.of(json));
 
     // Then
     then(cordraFeign).should().postCordraObjects(eq(result), eq("Bearer Test-Token"));
@@ -62,25 +60,29 @@ class CondraSendServiceTest {
   @ValueSource(strings = {"auth-failed-response.json", "auth-invalid-response.json"})
   void testAuthFailed(String filename) throws IOException {
     // Given
-    var objectString = loadResourceFile("test-object.json");
-    var object = mapper.readValue(objectString, OpenDSWrapper.class);
+    var json = givenJson("test-object.json");
     given(cordraFeign.authenticate(any())).willReturn(
         loadResourceFile(filename));
 
     // When
-    cordraSendService.commitUpsertObject(List.of(object));
+    cordraSendService.commitUpsertObject(List.of(json));
 
     // Then
     then(cordraFeign).shouldHaveNoMoreInteractions();
   }
 
-  private ArrayNode getJsonObject(OpenDSWrapper objectString) {
-    var array = mapper.createArrayNode();
+  private JsonNode givenJson(String fileName) throws IOException {
+    var objectString = loadResourceFile(fileName);
+    var contentNode = (ObjectNode) mapper.readTree(objectString);
     var object = mapper.createObjectNode();
-    var contentNode = (ObjectNode) mapper.valueToTree(objectString);
     contentNode.put("@type", properties.getType());
     object.put("type", properties.getType());
     object.set("content", contentNode);
+    return object;
+  }
+
+  private ArrayNode getJsonObject(JsonNode object) {
+    var array = mapper.createArrayNode();
     array.add(object);
     return array;
   }

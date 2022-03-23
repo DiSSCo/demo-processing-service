@@ -1,11 +1,13 @@
 package eu.dissco.demoprocessingservice.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.demoprocessingservice.client.CordraFeign;
 import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
 import eu.dissco.demoprocessingservice.properties.CordraProperties;
+import java.util.Collection;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,33 +23,20 @@ public class CordraSendService {
   private final CordraProperties properties;
   private final CordraFeign cordraFeign;
 
-  @Async
-  public void commitUpsertObject(List<OpenDSWrapper> upsertObjects) {
+  public void commitUpsertObject(Collection<JsonNode> upsertObjects) {
     var bearerToken = authenticate();
     if (bearerToken != null) {
       var array = mapper.createArrayNode();
-      for (OpenDSWrapper content : upsertObjects) {
-        array.add(parseToJson(content));
-      }
-      String response = cordraFeign.postCordraObjects(array,
-          "Bearer " + bearerToken);
+      array.addAll(upsertObjects);
+      log.info("Sending message to Cordra instance, total messages: {}", upsertObjects.size());
+      String response = cordraFeign.postCordraObjects(array, "Bearer " + bearerToken);
       processResponse(upsertObjects, response);
+    } else {
+      log.warn("Bearer token is empty!!!");
     }
   }
 
-  private ObjectNode parseToJson(OpenDSWrapper content) {
-    var object = mapper.createObjectNode();
-    var contentNode = (ObjectNode) mapper.valueToTree(content);
-    contentNode.put("@type", properties.getType());
-    object.put("type", properties.getType());
-    object.set("content", contentNode);
-    if (content.getId() != null){
-      object.put("id", content.getId());
-    }
-    return object;
-  }
-
-  private void processResponse(List<OpenDSWrapper> upsertObjects, String response) {
+  private void processResponse(Collection<JsonNode> upsertObjects, String response) {
     try {
       var success = mapper.readTree(response).get("success").asBoolean();
       if (success) {

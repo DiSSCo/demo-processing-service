@@ -12,7 +12,6 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import eu.dissco.demoprocessingservice.client.CordraFeign;
-import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
 import eu.dissco.demoprocessingservice.properties.CordraProperties;
 import java.io.IOException;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,7 +38,8 @@ class CordraServiceTest {
 
   @BeforeEach
   void setup() throws IOException {
-    this.service = new CordraService(cordraFeign, mapper, validationService, properties, kafkaPublishService);
+    this.service = new CordraService(cordraFeign, mapper, validationService, properties,
+        kafkaPublishService);
     var factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V201909);
     this.schema = factory.getSchema(loadResourceFile("schema.json"));
   }
@@ -51,14 +51,13 @@ class CordraServiceTest {
     given(cordraFeign.search(anyString())).willReturn(loadResourceFile("test-empty-search.json"));
     given(validationService.retrieveSchema(anyString())).willReturn(schema);
     given(properties.getType()).willReturn("ODStypeV0.2-Test");
+    var json = mapper.readTree(loadResourceFile("test-object-full.json"));
 
     // When
     var result = service.processItem(message);
 
     // Then
-    var messageNode = (ObjectNode) mapper.readTree(message);
-    messageNode.put("@type", "ODStypeV0.2-Test");
-    assertThat(result.get()).isEqualTo(mapper.treeToValue(messageNode, OpenDSWrapper.class));
+    assertThat(result.get()).isEqualTo(json);
   }
 
   @Test
@@ -83,17 +82,15 @@ class CordraServiceTest {
     given(cordraFeign.search(anyString())).willReturn(loadResourceFile("test-search-unequal.json"));
     given(validationService.retrieveSchema(anyString())).willReturn(schema);
     given(properties.getType()).willReturn("ODStypeV0.2-Test");
+    var json = (ObjectNode) mapper.readTree(loadResourceFile("test-object-full.json"));
+    json.put("id", "test/eab36efab0bf0e60dfe0");
 
     // When
     var result = service.processItem(message);
 
     // Then
-    var messageNode = (ObjectNode) mapper.readTree(message);
-    messageNode.put("@type", "ODStypeV0.2-Test");
-    var expected = mapper.treeToValue(messageNode, OpenDSWrapper.class);
-    expected.setId("test/eab36efab0bf0e60dfe0");
     then(cordraFeign).shouldHaveNoMoreInteractions();
-    assertThat(result.get()).isEqualTo(expected);
+    assertThat(result.get()).isEqualTo(json);
   }
 
   @Test
@@ -115,17 +112,16 @@ class CordraServiceTest {
     // Given
     var message = loadResourceFile("test-object-invalid-schema.json");
     given(cordraFeign.search(anyString())).willReturn(loadResourceFile("test-empty-search.json"));
-    var factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V201909);
-    var schema = factory.getSchema(loadResourceFile("schema.json"));
     given(validationService.retrieveSchema(anyString()))
         .willReturn(schema);
     given(properties.getType()).willReturn("ODStypeV0.2-Test");
 
     // When
-    service.processItem(message);
+    var result = service.processItem(message);
 
     // Then
     then(cordraFeign).shouldHaveNoMoreInteractions();
+    assertThat(result.get()).isNull();
   }
 
 }

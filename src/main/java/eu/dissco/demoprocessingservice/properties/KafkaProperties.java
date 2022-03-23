@@ -22,6 +22,6 @@ public class KafkaProperties {
   private String topic;
 
   @Positive
-  private int batchSize = 1000;
+  private int batchSize = 500;
 
 }
