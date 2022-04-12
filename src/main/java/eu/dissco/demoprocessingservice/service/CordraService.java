@@ -32,15 +32,19 @@ public class CordraService {
   @Async("processingThreadPoolTaskExecutor")
   public CompletableFuture<JsonNode> processItem(CloudEvent message) {
     try {
-      var data = message.getData().toBytes();
-      var object = mapper.readValue(data, OpenDSWrapper.class);
+      var data = message.getData();
+      if (data == null){
+        log.error("Event does not contain data: {}", message);
+        return CompletableFuture.completedFuture(null);
+      }
+      var object = mapper.readValue(data.toBytes(), OpenDSWrapper.class);
       object.setType(properties.getType());
       var existingObjectOptional = findExisting(
           object.getAuthoritative().getPhysicalSpecimenId());
       if (existingObjectOptional.isEmpty()) {
-        return processNewObject(data, object);
+        return processNewObject(data.toBytes(), object);
       } else {
-        return processExistingObject(data, object, existingObjectOptional.get());
+        return processExistingObject(data.toBytes(), object, existingObjectOptional.get());
       }
     } catch (SchemaValidationException e) {
       log.error("Unable to validate message: {}", message, e);
