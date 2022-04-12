@@ -1,5 +1,7 @@
 package eu.dissco.demoprocessingservice.service;
 
+import io.cloudevents.CloudEvent;
+import io.cloudevents.CloudEventData;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -18,7 +20,7 @@ public class KafkaService {
   private final CordraSendService cordraSendService;
 
   @KafkaListener(topics = "${kafka.topic}")
-  public void getMessages(@Payload List<String> messages) {
+  public void getMessages(@Payload List<CloudEvent> messages) {
     log.info("Received batch of: {} for kafka", messages.size());
     var list = messages.stream()
         .map(cordraService::processItem)

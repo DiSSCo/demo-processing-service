@@ -1,6 +1,8 @@
 package eu.dissco.demoprocessingservice.configuration;
 
 import eu.dissco.demoprocessingservice.properties.KafkaProperties;
+import io.cloudevents.CloudEvent;
+import io.cloudevents.kafka.CloudEventDeserializer;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -24,7 +26,7 @@ public class KafkaConfiguration {
   private final KafkaProperties properties;
 
   @Bean
-  public ConsumerFactory<String, String> consumerFactory() {
+  public ConsumerFactory<String, CloudEvent> consumerFactory() {
     Map<String, Object> props = new HashMap<>();
     props.put(
         ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -37,15 +39,15 @@ public class KafkaConfiguration {
         StringDeserializer.class);
     props.put(
         ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-        StringDeserializer.class);
+        CloudEventDeserializer.class);
     props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, properties.getBatchSize());
     return new DefaultKafkaConsumerFactory<>(props);
   }
 
   @Bean
-  public ConcurrentKafkaListenerContainerFactory<String, String>
+  public ConcurrentKafkaListenerContainerFactory<String, CloudEvent>
   kafkaListenerContainerFactory() {
-    ConcurrentKafkaListenerContainerFactory<String, String> factory =
+    ConcurrentKafkaListenerContainerFactory<String, CloudEvent> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(consumerFactory());
     factory.setBatchListener(true);

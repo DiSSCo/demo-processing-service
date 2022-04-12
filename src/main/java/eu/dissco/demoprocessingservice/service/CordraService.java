@@ -9,6 +9,8 @@ import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
 import eu.dissco.demoprocessingservice.exception.JsonValidationException;
 import eu.dissco.demoprocessingservice.exception.SchemaValidationException;
 import eu.dissco.demoprocessingservice.properties.CordraProperties;
+import io.cloudevents.CloudEvent;
+import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.AllArgsConstructor;
@@ -28,27 +30,28 @@ public class CordraService {
   private final KafkaPublishService kafkaPublishService;
 
   @Async("processingThreadPoolTaskExecutor")
-  public CompletableFuture<JsonNode> processItem(String message) {
+  public CompletableFuture<JsonNode> processItem(CloudEvent message) {
     try {
-      var object = mapper.readValue(message, OpenDSWrapper.class);
+      var data = message.getData().toBytes();
+      var object = mapper.readValue(data, OpenDSWrapper.class);
       object.setType(properties.getType());
       var existingObjectOptional = findExisting(
           object.getAuthoritative().getPhysicalSpecimenId());
       if (existingObjectOptional.isEmpty()) {
-        return processNewObject(message, object);
+        return processNewObject(data, object);
       } else {
-        return processExistingObject(message, object, existingObjectOptional.get());
+        return processExistingObject(data, object, existingObjectOptional.get());
       }
-    } catch (JsonProcessingException e) {
-      log.error("Unable to parse object: {}", message, e);
     } catch (SchemaValidationException e) {
       log.error("Unable to validate message: {}", message, e);
+    } catch (IOException e) {
+      log.error("Unable to parse object: {}", message, e);
     }
     return CompletableFuture.completedFuture(null);
   }
 
-  private CompletableFuture<JsonNode> processNewObject(String message,
-      OpenDSWrapper object) throws SchemaValidationException, JsonProcessingException {
+  private CompletableFuture<JsonNode> processNewObject(byte[] message, OpenDSWrapper object)
+      throws SchemaValidationException, IOException {
     var json = validate(message);
     if (object.getImages() != null && !object.getImages().isEmpty()) {
       kafkaPublishService.sendMessage(object, "images");
@@ -56,9 +59,9 @@ public class CordraService {
     return CompletableFuture.completedFuture(wrapJson(json, null));
   }
 
-  private CompletableFuture<JsonNode> processExistingObject(String message,
+  private CompletableFuture<JsonNode> processExistingObject(byte[] message,
       OpenDSWrapper object, JsonNode existingObjectOptional)
-      throws JsonProcessingException, SchemaValidationException {
+      throws IOException, SchemaValidationException {
     var existingObject = mapper.treeToValue(existingObjectOptional.get("content"),
         OpenDSWrapper.class);
     if (existingObject.equals(object)) {
@@ -72,8 +75,8 @@ public class CordraService {
     }
   }
 
-  private ObjectNode validate(String message)
-      throws SchemaValidationException, JsonProcessingException {
+  private ObjectNode validate(byte[] message)
+      throws SchemaValidationException, IOException {
     var contentNode = (ObjectNode) mapper.readTree(message);
     contentNode.put("@type", properties.getType());
     validateJson(contentNode);

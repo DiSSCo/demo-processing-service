@@ -1,6 +1,7 @@
 package eu.dissco.demoprocessingservice.service;
 
 import static eu.dissco.demoprocessingservice.util.TestUtils.loadResourceFile;
+import static eu.dissco.demoprocessingservice.util.TestUtils.loadResourceFileToString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -14,6 +15,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.demoprocessingservice.client.CordraFeign;
 import eu.dissco.demoprocessingservice.properties.CordraProperties;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,9 +46,9 @@ class CondraSendServiceTest {
   void testSendMessages() throws IOException {
     // Given
     var json = givenJson("test-object.json");
-    given(cordraFeign.authenticate(any())).willReturn(loadResourceFile("auth-response.json"));
+    given(cordraFeign.authenticate(any())).willReturn(loadResourceFileToString("auth-response.json"));
     given(cordraFeign.postCordraObjects(any(), anyString())).willReturn(
-        loadResourceFile("upsert-response.json"));
+        loadResourceFileToString("upsert-response.json"));
     var result = getJsonObject(json);
 
     // When
@@ -62,7 +64,7 @@ class CondraSendServiceTest {
     // Given
     var json = givenJson("test-object.json");
     given(cordraFeign.authenticate(any())).willReturn(
-        loadResourceFile(filename));
+        loadResourceFileToString(filename));
 
     // When
     cordraSendService.commitUpsertObject(List.of(json));
