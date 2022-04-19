@@ -1,6 +1,8 @@
 package eu.dissco.demoprocessingservice.service;
 
+import static eu.dissco.demoprocessingservice.util.TestUtils.createCloudEvent;
 import static eu.dissco.demoprocessingservice.util.TestUtils.loadResourceFile;
+import static eu.dissco.demoprocessingservice.util.TestUtils.loadResourceFileToString;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -41,20 +43,21 @@ class CordraServiceTest {
     this.service = new CordraService(cordraFeign, mapper, validationService, properties,
         kafkaPublishService);
     var factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V201909);
-    this.schema = factory.getSchema(loadResourceFile("schema.json"));
+    this.schema = factory.getSchema(loadResourceFileToString("schema.json"));
   }
 
   @Test
   void testNewObject() throws Exception {
     // Given
     var message = loadResourceFile("test-object.json");
-    given(cordraFeign.search(anyString())).willReturn(loadResourceFile("test-empty-search.json"));
+    given(cordraFeign.search(anyString())).willReturn(
+        loadResourceFileToString("test-empty-search.json"));
     given(validationService.retrieveSchema(anyString())).willReturn(schema);
     given(properties.getType()).willReturn("ODStypeV0.2-Test");
     var json = mapper.readTree(loadResourceFile("test-object-full.json"));
 
     // When
-    var result = service.processItem(message);
+    var result = service.processItem(createCloudEvent(message));
 
     // Then
     assertThat(result.get()).isEqualTo(json);
@@ -64,11 +67,12 @@ class CordraServiceTest {
   void testEqualObject() throws Exception {
     // Given
     var message = loadResourceFile("test-object.json");
-    given(cordraFeign.search(anyString())).willReturn(loadResourceFile("test-search-equal.json"));
+    given(cordraFeign.search(anyString())).willReturn(
+        loadResourceFileToString("test-search-equal.json"));
     given(properties.getType()).willReturn("ODStypeV0.2-Test");
 
     // When
-    var result = service.processItem(message);
+    var result = service.processItem(createCloudEvent(message));
 
     // Then
     then(cordraFeign).shouldHaveNoMoreInteractions();
@@ -79,14 +83,15 @@ class CordraServiceTest {
   void testUnequalObject() throws Exception {
     // Given
     var message = loadResourceFile("test-object.json");
-    given(cordraFeign.search(anyString())).willReturn(loadResourceFile("test-search-unequal.json"));
+    given(cordraFeign.search(anyString())).willReturn(
+        loadResourceFileToString("test-search-unequal.json"));
     given(validationService.retrieveSchema(anyString())).willReturn(schema);
     given(properties.getType()).willReturn("ODStypeV0.2-Test");
     var json = (ObjectNode) mapper.readTree(loadResourceFile("test-object-full.json"));
     json.put("id", "test/eab36efab0bf0e60dfe0");
 
     // When
-    var result = service.processItem(message);
+    var result = service.processItem(createCloudEvent(message));
 
     // Then
     then(cordraFeign).shouldHaveNoMoreInteractions();
@@ -99,7 +104,7 @@ class CordraServiceTest {
     var message = loadResourceFile("test-object-invalid.json");
 
     // When
-    var result = service.processItem(message);
+    var result = service.processItem(createCloudEvent(message));
 
     // Then
     then(cordraFeign).shouldHaveNoInteractions();
@@ -111,13 +116,14 @@ class CordraServiceTest {
   void testValidationError() throws Exception {
     // Given
     var message = loadResourceFile("test-object-invalid-schema.json");
-    given(cordraFeign.search(anyString())).willReturn(loadResourceFile("test-empty-search.json"));
+    given(cordraFeign.search(anyString())).willReturn(
+        loadResourceFileToString("test-empty-search.json"));
     given(validationService.retrieveSchema(anyString()))
         .willReturn(schema);
     given(properties.getType()).willReturn("ODStypeV0.2-Test");
 
     // When
-    var result = service.processItem(message);
+    var result = service.processItem(createCloudEvent(message));
 
     // Then
     then(cordraFeign).shouldHaveNoMoreInteractions();

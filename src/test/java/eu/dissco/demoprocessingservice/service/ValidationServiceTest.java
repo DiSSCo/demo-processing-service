@@ -1,6 +1,6 @@
 package eu.dissco.demoprocessingservice.service;
 
-import static eu.dissco.demoprocessingservice.util.TestUtils.loadResourceFile;
+import static eu.dissco.demoprocessingservice.util.TestUtils.loadResourceFileToString;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,7 +43,7 @@ class ValidationServiceTest {
     var searchResults = new SearchResultsFromStream(1, Stream.of(givenCordraObject()));
     given(cordraClient.search(anyString(), any(QueryParams.class))).willReturn(searchResults);
     var factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V201909);
-    var expected = factory.getSchema(loadResourceFile("schema.json"));
+    var expected = factory.getSchema(loadResourceFileToString("schema.json"));
 
     // When
     var result = validationService.retrieveSchema("type");
@@ -58,7 +58,7 @@ class ValidationServiceTest {
     var searchResults = new SearchResultsFromStream(1, Stream.empty());
     given(cordraClient.search(anyString(), any(QueryParams.class))).willReturn(searchResults);
     var factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V201909);
-    var expected = factory.getSchema(loadResourceFile("schema.json"));
+    var expected = factory.getSchema(loadResourceFileToString("schema.json"));
 
     // When / Then
     assertThrowsExactly(MissingSchemaException.class,
@@ -67,7 +67,7 @@ class ValidationServiceTest {
 
   private CordraObject givenCordraObject() throws IOException {
     var schemaObject = new JsonObject();
-    schemaObject.add("schema", JsonParser.parseString(loadResourceFile("schema.json")));
+    schemaObject.add("schema", JsonParser.parseString(loadResourceFileToString("schema.json")));
     CordraObject object = new CordraObject();
     object.type = "object";
     object.setContent(schemaObject);

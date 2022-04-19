@@ -19,6 +19,7 @@
 		<doip-sdk.version>2.1.0</doip-sdk.version>
 		<spring-cloud-starter-openfeign.version>3.1.0</spring-cloud-starter-openfeign.version>
 		<feign-okhttp.version>11.8</feign-okhttp.version>
+		<cloudevents.version>2.3.0</cloudevents.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -75,6 +76,21 @@
 			<groupId>io.github.openfeign</groupId>
 			<artifactId>feign-okhttp</artifactId>
 			<version>${feign-okhttp.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.cloudevents</groupId>
+			<artifactId>cloudevents-api</artifactId>
+			<version>${cloudevents.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.cloudevents</groupId>
+			<artifactId>cloudevents-core</artifactId>
+			<version>${cloudevents.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.cloudevents</groupId>
+			<artifactId>cloudevents-kafka</artifactId>
+			<version>${cloudevents.version}</version>
 		</dependency>
 
 		<dependency>

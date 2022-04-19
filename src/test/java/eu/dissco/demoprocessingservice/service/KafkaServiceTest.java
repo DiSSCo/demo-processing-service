@@ -1,12 +1,14 @@
 package eu.dissco.demoprocessingservice.service;
 
+import static eu.dissco.demoprocessingservice.util.TestUtils.createCloudEvent;
 import static eu.dissco.demoprocessingservice.util.TestUtils.loadResourceFile;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.cloudevents.CloudEvent;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -38,11 +40,11 @@ class KafkaServiceTest {
     // Given
     var message = loadResourceFile("test-object.json");
     var json = mapper.readTree(loadResourceFile("test-object-full.json"));
-    given(cordraService.processItem(anyString())).willReturn(
+    given(cordraService.processItem(any())).willReturn(
         CompletableFuture.completedFuture(json));
 
     // When
-    service.getMessages(List.of(message));
+    service.getMessages(List.of(createCloudEvent(message)));
 
     // Then
     then(cordraSendService).should().commitUpsertObject(eq(List.of(json)));
@@ -52,11 +54,11 @@ class KafkaServiceTest {
   void testNoMessages() throws IOException {
     // Given
     var message = loadResourceFile("test-object.json");
-    given(cordraService.processItem(anyString())).willReturn(
+    given(cordraService.processItem(any(CloudEvent.class))).willReturn(
         CompletableFuture.completedFuture(null));
 
     // When
-    service.getMessages(List.of(message));
+    service.getMessages(List.of(createCloudEvent(message)));
 
     // Then
     then(cordraSendService).shouldHaveNoInteractions();
