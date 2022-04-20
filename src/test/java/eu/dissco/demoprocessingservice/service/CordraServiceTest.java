@@ -4,7 +4,9 @@ import static eu.dissco.demoprocessingservice.util.TestUtils.createCloudEvent;
 import static eu.dissco.demoprocessingservice.util.TestUtils.loadResourceFile;
 import static eu.dissco.demoprocessingservice.util.TestUtils.loadResourceFileToString;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -14,7 +16,10 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import eu.dissco.demoprocessingservice.client.CordraFeign;
+import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
 import eu.dissco.demoprocessingservice.properties.CordraProperties;
+import eu.dissco.demoprocessingservice.util.TestUtils;
+import io.cloudevents.CloudEvent;
 import java.io.IOException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,13 +40,15 @@ class CordraServiceTest {
   private CordraFeign cordraFeign;
   @Mock
   private KafkaPublishService kafkaPublishService;
-  private CordraService service;
+  @Mock
+  private UpdateService updateService;
+  private ProcessingService service;
   private JsonSchema schema;
 
   @BeforeEach
   void setup() throws IOException {
-    this.service = new CordraService(cordraFeign, mapper, validationService, properties,
-        kafkaPublishService);
+    this.service = new ProcessingService(cordraFeign, mapper, validationService, properties,
+        kafkaPublishService, updateService);
     var factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V201909);
     this.schema = factory.getSchema(loadResourceFileToString("schema.json"));
   }
@@ -61,6 +68,7 @@ class CordraServiceTest {
 
     // Then
     assertThat(result.get()).isEqualTo(json);
+    then(kafkaPublishService).should().sendMessage(any(OpenDSWrapper.class), eq("anyQueue"));
   }
 
   @Test
@@ -89,6 +97,10 @@ class CordraServiceTest {
     given(properties.getType()).willReturn("ODStypeV0.2-Test");
     var json = (ObjectNode) mapper.readTree(loadResourceFile("test-object-full.json"));
     json.put("id", "test/eab36efab0bf0e60dfe0");
+    given(updateService.updateObject(any(OpenDSWrapper.class), any(CloudEvent.class),
+        any(OpenDSWrapper.class))).willReturn(
+        mapper.readValue(TestUtils.loadResourceFile("updateService/test-object.json"),
+            OpenDSWrapper.class));
 
     // When
     var result = service.processItem(createCloudEvent(message));
@@ -110,7 +122,6 @@ class CordraServiceTest {
     then(cordraFeign).shouldHaveNoInteractions();
     assertThat(result.get()).isNull();
   }
-
 
   @Test
   void testValidationError() throws Exception {

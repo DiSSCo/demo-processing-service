@@ -92,6 +92,12 @@
 			<artifactId>cloudevents-kafka</artifactId>
 			<version>${cloudevents.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>io.cloudevents</groupId>
+			<artifactId>cloudevents-json-jackson</artifactId>
+			<version>${cloudevents.version}</version>
+		</dependency>
+
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
