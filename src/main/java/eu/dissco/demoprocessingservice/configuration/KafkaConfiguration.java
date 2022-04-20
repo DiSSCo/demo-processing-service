@@ -3,6 +3,7 @@ package eu.dissco.demoprocessingservice.configuration;
 import eu.dissco.demoprocessingservice.properties.KafkaProperties;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventDeserializer;
+import io.cloudevents.kafka.CloudEventSerializer;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -55,7 +56,7 @@ public class KafkaConfiguration {
   }
 
   @Bean
-  public ProducerFactory<String, String> producerFactory() {
+  public ProducerFactory<String, CloudEvent> producerFactory() {
     Map<String, Object> configProps = new HashMap<>();
     configProps.put(
         ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -65,12 +66,12 @@ public class KafkaConfiguration {
         StringSerializer.class);
     configProps.put(
         ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-        StringSerializer.class);
+        CloudEventSerializer.class);
     return new DefaultKafkaProducerFactory<>(configProps);
   }
 
   @Bean
-  public KafkaTemplate<String, String> kafkaTemplate() {
+  public KafkaTemplate<String, CloudEvent> kafkaTemplate() {
     return new KafkaTemplate<>(producerFactory());
   }
 

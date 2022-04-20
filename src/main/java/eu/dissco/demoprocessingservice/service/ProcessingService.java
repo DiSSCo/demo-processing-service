@@ -5,14 +5,22 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.demoprocessingservice.client.CordraFeign;
+import eu.dissco.demoprocessingservice.domain.Enrichment;
+import eu.dissco.demoprocessingservice.domain.EventData;
+import eu.dissco.demoprocessingservice.domain.Image;
 import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
 import eu.dissco.demoprocessingservice.exception.JsonValidationException;
 import eu.dissco.demoprocessingservice.exception.SchemaValidationException;
 import eu.dissco.demoprocessingservice.properties.CordraProperties;
 import io.cloudevents.CloudEvent;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -21,30 +29,30 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class CordraService {
+public class ProcessingService {
 
   private final CordraFeign cordraFeign;
   private final ObjectMapper mapper;
   private final ValidationService validationService;
   private final CordraProperties properties;
   private final KafkaPublishService kafkaPublishService;
+  private final UpdateService updateService;
 
   @Async("processingThreadPoolTaskExecutor")
   public CompletableFuture<JsonNode> processItem(CloudEvent message) {
     try {
       var data = message.getData();
-      if (data == null){
+      if (data == null) {
         log.error("Event does not contain data: {}", message);
         return CompletableFuture.completedFuture(null);
       }
-      var object = mapper.readValue(data.toBytes(), OpenDSWrapper.class);
-      object.setType(properties.getType());
-      var existingObjectOptional = findExisting(
-          object.getAuthoritative().getPhysicalSpecimenId());
+      var event = mapper.readValue(data.toBytes(), EventData.class);
+      event.getOpenDS().setType(properties.getType());
+      var existingObjectOptional = findExisting(event.getOpenDS());
       if (existingObjectOptional.isEmpty()) {
-        return processNewObject(data.toBytes(), object);
+        return processNewObject(event);
       } else {
-        return processExistingObject(data.toBytes(), object, existingObjectOptional.get());
+        return processExistingObject(event.getOpenDS(), existingObjectOptional.get(), message);
       }
     } catch (SchemaValidationException e) {
       log.error("Unable to validate message: {}", message, e);
@@ -54,34 +62,46 @@ public class CordraService {
     return CompletableFuture.completedFuture(null);
   }
 
-  private CompletableFuture<JsonNode> processNewObject(byte[] message, OpenDSWrapper object)
+  private CompletableFuture<JsonNode> processNewObject(EventData event)
       throws SchemaValidationException, IOException {
-    var json = validate(message);
-    if (object.getImages() != null && !object.getImages().isEmpty()) {
-      kafkaPublishService.sendMessage(object, "images");
+    var json = validate(event.getOpenDS());
+    if (event.getEnrichment() != null) {
+      for (var enrichment : event.getEnrichment()) {
+        if (onlyImages(event, enrichment)) {
+          kafkaPublishService.sendMessage(event.getOpenDS(), enrichment.getName());
+        } else if (!enrichment.isImageOnly()) {
+          kafkaPublishService.sendMessage(event.getOpenDS(), enrichment.getName());
+        }
+      }
     }
     return CompletableFuture.completedFuture(wrapJson(json, null));
   }
 
-  private CompletableFuture<JsonNode> processExistingObject(byte[] message,
-      OpenDSWrapper object, JsonNode existingObjectOptional)
+  private boolean onlyImages(EventData event, Enrichment enrichment) {
+    return enrichment.isImageOnly() &&
+        event.getOpenDS().getImages() != null &&
+        !event.getOpenDS().getImages().isEmpty();
+  }
+
+  private CompletableFuture<JsonNode> processExistingObject(OpenDSWrapper newObject,
+      JsonNode existingObjectOptional, CloudEvent message)
       throws IOException, SchemaValidationException {
     var existingObject = mapper.treeToValue(existingObjectOptional.get("content"),
         OpenDSWrapper.class);
-    if (existingObject.equals(object)) {
+    if (existingObject.equals(newObject)) {
       log.debug("Objects are equal, no action needed");
       return CompletableFuture.completedFuture(null);
     } else {
-      log.debug("Objects are not equal, update existing object");
-      var json = validate(message);
+      var object = updateService.updateObject(newObject, message, existingObject);
+      var json = validate(object);
       return CompletableFuture.completedFuture(
           wrapJson(json, existingObjectOptional.get("id")));
     }
   }
 
-  private ObjectNode validate(byte[] message)
-      throws SchemaValidationException, IOException {
-    var contentNode = (ObjectNode) mapper.readTree(message);
+  private ObjectNode validate(OpenDSWrapper message)
+      throws SchemaValidationException {
+    var contentNode = mapper.convertValue(message, ObjectNode.class);
     contentNode.put("@type", properties.getType());
     validateJson(contentNode);
     return contentNode;
@@ -96,8 +116,9 @@ public class CordraService {
     }
   }
 
-  private Optional<JsonNode> findExisting(String physicalSpecimenId)
+  private Optional<JsonNode> findExisting(OpenDSWrapper openDSWrapper)
       throws JsonProcessingException {
+    var physicalSpecimenId = openDSWrapper.getAuthoritative().getPhysicalSpecimenId();
     if (physicalSpecimenId == null) {
       return Optional.empty();
     }

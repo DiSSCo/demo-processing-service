@@ -1,7 +1,6 @@
 package eu.dissco.demoprocessingservice.service;
 
 import io.cloudevents.CloudEvent;
-import io.cloudevents.CloudEventData;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -16,7 +15,7 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class KafkaService {
 
-  private final CordraService cordraService;
+  private final ProcessingService cordraService;
   private final CordraSendService cordraSendService;
 
   @KafkaListener(topics = "${kafka.topic}")

@@ -24,7 +24,7 @@ class KafkaServiceTest {
   private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
 
   @Mock
-  private CordraService cordraService;
+  private ProcessingService cordraService;
   @Mock
   private CordraSendService cordraSendService;
 

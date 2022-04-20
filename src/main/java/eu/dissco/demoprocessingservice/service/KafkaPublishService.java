@@ -3,6 +3,13 @@ package eu.dissco.demoprocessingservice.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
+import eu.dissco.demoprocessingservice.properties.ApplicationProperties;
+import io.cloudevents.CloudEvent;
+import io.cloudevents.core.builder.CloudEventBuilder;
+import java.net.URI;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -17,26 +24,40 @@ import org.springframework.util.concurrent.ListenableFutureCallback;
 public class KafkaPublishService {
 
   private final ObjectMapper mapper;
-  private final KafkaTemplate<String, String> kafkaTemplate;
+  private final KafkaTemplate<String, CloudEvent> kafkaTemplate;
+  private final ApplicationProperties applicationProperties;
 
   public void sendMessage(OpenDSWrapper openDSWrapper, String topic) {
+    var event = createCloudEvent(openDSWrapper);
+    ListenableFuture<SendResult<String, CloudEvent>> future = kafkaTemplate.send(topic, event);
+    future.addCallback(new ListenableFutureCallback<>() {
+
+      @Override
+      public void onSuccess(SendResult<String, CloudEvent> result) {
+        log.debug("Message successfully send to: {}", topic);
+      }
+
+      @Override
+      public void onFailure(Throwable ex) {
+        log.error("Unable to send message: {}", event, ex);
+      }
+    });
+  }
+
+  private CloudEvent createCloudEvent(OpenDSWrapper openDSWrapper) {
     try {
-      var json = mapper.writeValueAsString(openDSWrapper);
-      ListenableFuture<SendResult<String, String>> future = kafkaTemplate.send(topic, json);
-      future.addCallback(new ListenableFutureCallback<>() {
-
-        @Override
-        public void onSuccess(SendResult<String, String> result) {
-          log.debug("Message successfully send to: {}", topic);
-        }
-
-        @Override
-        public void onFailure(Throwable ex) {
-          log.error("Unable to send message: {}", json, ex);
-        }
-      });
+      return CloudEventBuilder.v1()
+          .withId(UUID.randomUUID().toString())
+          .withType(applicationProperties.getEventType())
+          .withSource(URI.create(applicationProperties.getEndpoint()))
+          .withSubject(applicationProperties.getServiceName())
+          .withTime(OffsetDateTime.now(ZoneOffset.UTC))
+          .withDataContentType("application/json")
+          .withData(mapper.writeValueAsBytes(openDSWrapper))
+          .build();
     } catch (JsonProcessingException e) {
-      log.error("Failed to pars Objects to Json: {}", openDSWrapper);
+      log.error("Unable to deserialize the object: {}", openDSWrapper);
     }
+    return null;
   }
 }
