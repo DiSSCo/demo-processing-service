@@ -8,6 +8,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.dissco.demoprocessingservice.exception.AuthenticationException;
 import io.cloudevents.CloudEvent;
 import java.io.IOException;
 import java.util.List;
@@ -36,7 +37,7 @@ class KafkaServiceTest {
   }
 
   @Test
-  void testGetMessages() throws IOException {
+  void testGetMessages() throws IOException, AuthenticationException {
     // Given
     var message = loadResourceFile("test-object.json");
     var json = mapper.readTree(loadResourceFile("test-object-full.json"));
@@ -51,7 +52,7 @@ class KafkaServiceTest {
   }
 
   @Test
-  void testNoMessages() throws IOException {
+  void testNoMessages() throws IOException, AuthenticationException {
     // Given
     var message = loadResourceFile("test-object.json");
     given(cordraService.processItem(any(CloudEvent.class))).willReturn(

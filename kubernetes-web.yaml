@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-processing-service-web
+  labels:
+    app: demo-processing-service-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-processing-service-web
+  template:
+    metadata:
+      labels:
+        app: demo-processing-service-web
+    spec:
+      containers:
+        - name: demo-processing-service-web
+          image: leeflangjs/demo-processing-service:end-user-demo
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          env:
+            - name: cordra.host
+              value: http://cordra-service:8443
+            - name: cordra.username
+              value:
+            - name: cordra.password
+              value:
+            - name: cordra.type
+              value: ODStypeV0.2-Demo
+            - name: kafka.publisher.host
+              value: kafka.kafka.svc.cluster.local:9092
+            - name: spring.profiles.active
+              value: web
+            - name: keycloak.auth-server-url
+              value:
+            - name: keycloak.realm
+              value:
+            - name: keycloak.resource
+              value:
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false

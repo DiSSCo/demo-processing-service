@@ -4,6 +4,7 @@ import static eu.dissco.demoprocessingservice.util.TestUtils.createCloudEvent;
 import static eu.dissco.demoprocessingservice.util.TestUtils.loadResourceFile;
 import static eu.dissco.demoprocessingservice.util.TestUtils.loadResourceFileToString;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -11,16 +12,19 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import eu.dissco.demoprocessingservice.client.CordraFeign;
 import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
+import eu.dissco.demoprocessingservice.exception.JsonValidationException;
 import eu.dissco.demoprocessingservice.properties.CordraProperties;
 import eu.dissco.demoprocessingservice.util.TestUtils;
 import io.cloudevents.CloudEvent;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,7 +32,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class CordraServiceTest {
+class ProcessingServiceTest {
 
   private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
 
@@ -57,7 +61,7 @@ class CordraServiceTest {
   void testNewObject() throws Exception {
     // Given
     var message = loadResourceFile("test-object.json");
-    given(cordraFeign.search(anyString())).willReturn(
+    given(cordraFeign.searchSingle(anyString())).willReturn(
         loadResourceFileToString("test-empty-search.json"));
     given(validationService.retrieveSchema(anyString())).willReturn(schema);
     given(properties.getType()).willReturn("ODStypeV0.2-Test");
@@ -75,7 +79,7 @@ class CordraServiceTest {
   void testEqualObject() throws Exception {
     // Given
     var message = loadResourceFile("test-object.json");
-    given(cordraFeign.search(anyString())).willReturn(
+    given(cordraFeign.searchSingle(anyString())).willReturn(
         loadResourceFileToString("test-search-equal.json"));
     given(properties.getType()).willReturn("ODStypeV0.2-Test");
 
@@ -91,7 +95,7 @@ class CordraServiceTest {
   void testUnequalObject() throws Exception {
     // Given
     var message = loadResourceFile("test-object.json");
-    given(cordraFeign.search(anyString())).willReturn(
+    given(cordraFeign.searchSingle(anyString())).willReturn(
         loadResourceFileToString("test-search-unequal.json"));
     given(validationService.retrieveSchema(anyString())).willReturn(schema);
     given(properties.getType()).willReturn("ODStypeV0.2-Test");
@@ -120,14 +124,15 @@ class CordraServiceTest {
 
     // Then
     then(cordraFeign).shouldHaveNoInteractions();
-    assertThat(result.get()).isNull();
+    assertThatThrownBy(result::get).isInstanceOf(ExecutionException.class).hasRootCauseInstanceOf(
+        UnrecognizedPropertyException.class);
   }
 
   @Test
   void testValidationError() throws Exception {
     // Given
     var message = loadResourceFile("test-object-invalid-schema.json");
-    given(cordraFeign.search(anyString())).willReturn(
+    given(cordraFeign.searchSingle(anyString())).willReturn(
         loadResourceFileToString("test-empty-search.json"));
     given(validationService.retrieveSchema(anyString()))
         .willReturn(schema);
@@ -138,7 +143,8 @@ class CordraServiceTest {
 
     // Then
     then(cordraFeign).shouldHaveNoMoreInteractions();
-    assertThat(result.get()).isNull();
+    assertThatThrownBy(result::get).isInstanceOf(ExecutionException.class).hasRootCauseInstanceOf(
+        JsonValidationException.class);
   }
 
 }

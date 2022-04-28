@@ -1,12 +1,12 @@
 package eu.dissco.demoprocessingservice.exception;
 
-public class MissingSchemaException extends SchemaValidationException{
+public class MissingSchemaException extends SchemaValidationException {
 
-    public MissingSchemaException(String message) {
-        super(message);
-    }
+  public MissingSchemaException(String message) {
+    super(message);
+  }
 
-    public MissingSchemaException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public MissingSchemaException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

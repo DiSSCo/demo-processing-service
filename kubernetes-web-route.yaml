@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-processing-service-web-service
+spec:
+  selector:
+    app: demo-processing-service-web
+  ports:
+    - protocol: TCP
+      port: 8080
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: demo-processing-service-web-route
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`kubernetes.demo.nsidr.org`) && PathPrefix(`/opends`)
+      kind: Rule
+      services:
+        - name: demo-processing-service-web-service
+          namespace: default
+          port: 8080
