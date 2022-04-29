@@ -25,7 +25,7 @@ class KafkaServiceTest {
   private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
 
   @Mock
-  private ProcessingService cordraService;
+  private ProcessingService processingService;
   @Mock
   private CordraSendService cordraSendService;
 
@@ -33,7 +33,7 @@ class KafkaServiceTest {
 
   @BeforeEach
   void setup() {
-    this.service = new KafkaService(cordraService, cordraSendService);
+    this.service = new KafkaService(processingService, cordraSendService);
   }
 
   @Test
@@ -41,7 +41,7 @@ class KafkaServiceTest {
     // Given
     var message = loadResourceFile("test-object.json");
     var json = mapper.readTree(loadResourceFile("test-object-full.json"));
-    given(cordraService.processItem(any())).willReturn(
+    given(processingService.processItem(any())).willReturn(
         CompletableFuture.completedFuture(json));
 
     // When
@@ -55,7 +55,7 @@ class KafkaServiceTest {
   void testNoMessages() throws IOException, AuthenticationException {
     // Given
     var message = loadResourceFile("test-object.json");
-    given(cordraService.processItem(any(CloudEvent.class))).willReturn(
+    given(processingService.processItem(any(CloudEvent.class))).willReturn(
         CompletableFuture.completedFuture(null));
 
     // When
