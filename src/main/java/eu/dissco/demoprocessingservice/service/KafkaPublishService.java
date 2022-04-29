@@ -40,7 +40,9 @@ public class KafkaPublishService {
 
   public void sendMessage(JsonNode node, String topic) {
     try {
-      var data = mapper.writeValueAsBytes(node);
+      var eventMessage = mapper.createObjectNode();
+      eventMessage.set("openDS", node);
+      var data = mapper.writeValueAsBytes(eventMessage);
       var event = createCloudEvent(data);
       publishMessage(event, topic);
     } catch (JsonProcessingException e) {
