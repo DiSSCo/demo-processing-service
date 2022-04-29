@@ -28,7 +28,7 @@ public class KafkaService {
   private final KafkaPublishService kafkaPublishService;
   private final KafkaConsumerProperties consumerProperties;
 
-  @KafkaListener(topics = "${kafka.topic}")
+  @KafkaListener(topics = "${kafka.consumer.topic}")
   public void getMessages(@Payload List<CloudEvent> messages) throws AuthenticationException {
     log.info("Received batch of: {} for kafka", messages.size());
     var map = messages.stream()
