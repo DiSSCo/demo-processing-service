@@ -1,30 +1,27 @@
 package eu.dissco.demoprocessingservice.configuration;
 
-import eu.dissco.demoprocessingservice.properties.KafkaProperties;
+import eu.dissco.demoprocessingservice.Profiles;
+import eu.dissco.demoprocessingservice.properties.KafkaConsumerProperties;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.kafka.CloudEventDeserializer;
-import io.cloudevents.kafka.CloudEventSerializer;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.core.ProducerFactory;
 
+@Profile(Profiles.KAFKA)
 @Configuration
 @AllArgsConstructor
-public class KafkaConfiguration {
+public class KafkaConsumerConfiguration {
 
-  private final KafkaProperties properties;
+  private final KafkaConsumerProperties properties;
 
   @Bean
   public ConsumerFactory<String, CloudEvent> consumerFactory() {
@@ -53,26 +50,6 @@ public class KafkaConfiguration {
     factory.setConsumerFactory(consumerFactory());
     factory.setBatchListener(true);
     return factory;
-  }
-
-  @Bean
-  public ProducerFactory<String, CloudEvent> producerFactory() {
-    Map<String, Object> configProps = new HashMap<>();
-    configProps.put(
-        ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-        properties.getHost());
-    configProps.put(
-        ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-        StringSerializer.class);
-    configProps.put(
-        ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-        CloudEventSerializer.class);
-    return new DefaultKafkaProducerFactory<>(configProps);
-  }
-
-  @Bean
-  public KafkaTemplate<String, CloudEvent> kafkaTemplate() {
-    return new KafkaTemplate<>(producerFactory());
   }
 
 }

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.demoprocessingservice.client.CordraFeign;
 import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
+import eu.dissco.demoprocessingservice.exception.AuthenticationException;
 import eu.dissco.demoprocessingservice.properties.CordraProperties;
 import java.util.Collection;
 import java.util.List;
@@ -23,7 +24,8 @@ public class CordraSendService {
   private final CordraProperties properties;
   private final CordraFeign cordraFeign;
 
-  public void commitUpsertObject(Collection<JsonNode> upsertObjects) {
+  public String commitUpsertObject(Collection<JsonNode> upsertObjects)
+      throws AuthenticationException {
     var bearerToken = authenticate();
     if (bearerToken != null) {
       var array = mapper.createArrayNode();
@@ -31,8 +33,10 @@ public class CordraSendService {
       log.info("Sending message to Cordra instance, total messages: {}", upsertObjects.size());
       String response = cordraFeign.postCordraObjects(array, "Bearer " + bearerToken);
       processResponse(upsertObjects, response);
+      return response;
     } else {
       log.warn("Bearer token is empty!!!");
+      throw new AuthenticationException("Failed to authenticate with Cordra");
     }
   }
 

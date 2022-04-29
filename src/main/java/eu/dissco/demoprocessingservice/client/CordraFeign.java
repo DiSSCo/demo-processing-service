@@ -17,6 +17,12 @@ public interface CordraFeign {
   @PostMapping("auth/token")
   String authenticate(JsonNode json);
 
-  @GetMapping("/search?query={query}&pageNum=0&pageSize=1")
+  @GetMapping("/search?query={query}")
   String search(@PathVariable String query);
+
+  @GetMapping("/search?query={query}&pageNum=0&pageSize=1")
+  String searchSingle(@PathVariable String query);
+
+  @GetMapping("/objects/{id}")
+  String searchById(@PathVariable String id);
 }

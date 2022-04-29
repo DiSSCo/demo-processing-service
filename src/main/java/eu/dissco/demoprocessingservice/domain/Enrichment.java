@@ -1,6 +1,5 @@
 package eu.dissco.demoprocessingservice.domain;
 
-import lombok.Builder;
 import lombok.Data;
 
 @Data

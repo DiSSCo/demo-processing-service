@@ -7,20 +7,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.dissco.demoprocessingservice.client.CordraFeign;
 import eu.dissco.demoprocessingservice.domain.Enrichment;
 import eu.dissco.demoprocessingservice.domain.EventData;
-import eu.dissco.demoprocessingservice.domain.Image;
 import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
 import eu.dissco.demoprocessingservice.exception.JsonValidationException;
 import eu.dissco.demoprocessingservice.exception.SchemaValidationException;
 import eu.dissco.demoprocessingservice.properties.CordraProperties;
 import io.cloudevents.CloudEvent;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -56,20 +50,18 @@ public class ProcessingService {
       }
     } catch (SchemaValidationException e) {
       log.error("Unable to validate message: {}", message, e);
+      return CompletableFuture.failedFuture(e);
     } catch (IOException e) {
-      log.error("Unable to parse object: {}", message, e);
+      return CompletableFuture.failedFuture(e);
     }
-    return CompletableFuture.completedFuture(null);
   }
 
   private CompletableFuture<JsonNode> processNewObject(EventData event)
-      throws SchemaValidationException, IOException {
+      throws SchemaValidationException {
     var json = validate(event.getOpenDS());
     if (event.getEnrichment() != null) {
       for (var enrichment : event.getEnrichment()) {
-        if (onlyImages(event, enrichment)) {
-          kafkaPublishService.sendMessage(event.getOpenDS(), enrichment.getName());
-        } else if (!enrichment.isImageOnly()) {
+        if (!enrichment.isImageOnly() || onlyImages(event, enrichment)) {
           kafkaPublishService.sendMessage(event.getOpenDS(), enrichment.getName());
         }
       }
@@ -92,7 +84,7 @@ public class ProcessingService {
       log.debug("Objects are equal, no action needed");
       return CompletableFuture.completedFuture(null);
     } else {
-      var object = updateService.updateObject(newObject, message, existingObject);
+      var object = updateService.updateObject(newObject, message.getType(), existingObject);
       var json = validate(object);
       return CompletableFuture.completedFuture(
           wrapJson(json, existingObjectOptional.get("id")));
@@ -126,7 +118,7 @@ public class ProcessingService {
     var escapedPhysicalSpecimenId = physicalSpecimenId.replace("\\", "\\\\");
     var query = "type:\"" + properties.getType() + "\" AND " +
         "/ods\\:authoritative/ods\\:physicalSpecimenId:\"" + escapedPhysicalSpecimenId + "\"";
-    var result = cordraFeign.search(query);
+    var result = cordraFeign.searchSingle(query);
     var firstResult = mapper.readTree(result).get("results").get(0);
     if (firstResult == null || firstResult.isEmpty()) {
       return Optional.empty();

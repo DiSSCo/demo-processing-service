@@ -16,23 +16,46 @@ spec:
     spec:
       containers:
         - name: demo-processing-service
-          image: leeflangjs/demo-processing-service:latest
+          image: leeflangjs/demo-processing-service
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           env:
             - name: cordra.host
-              value:
+              value: http://cordra-service:8443
             - name: cordra.username
               value:
             - name: cordra.password
               value:
-            - name: kafka.host
-              value:
-            - name: kafka.group
-              value:
-            - name: kafka.topic
-              value:
+            - name: cordra.type
+              value: ODStypeV0.2-Demo
+            - name: spring.profiles.active
+              value: kafka
+            - name: kafka.consumer.host
+              value: kafka.kafka.svc.cluster.local:9092
+            - name: kafka.consumer.group
+              value: group
+            - name: kafka.consumer.topic
+              value: topic-multi
+            - name: kafka.publisher.host
+              value: kafka.kafka.svc.cluster.local:9092
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
-
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: processing-service-scaled-object
+spec:
+  scaleTargetRef:
+    name:          demo-processing-service
+  minReplicaCount: 0
+  maxReplicaCount:  1
+  triggers:
+  - type: kafka
+    metadata:
+      bootstrapServers: kafka.kafka.svc.cluster.local:9092
+      consumerGroup: group
+      topic: topic-multi
+      lagThreshold: '5'

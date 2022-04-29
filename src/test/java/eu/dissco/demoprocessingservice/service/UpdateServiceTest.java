@@ -82,10 +82,10 @@ class UpdateServiceTest {
         OpenDSWrapper.class);
     var newObject = mapper.readValue(TestUtils.loadResourceFile(newJson),
         OpenDSWrapper.class);
-    given(event.getType()).willReturn("eu.dissco.enrichment.response.event");
+    var type = "eu.dissco.enrichment.response.event";
 
     // When
-    var result = service.updateObject(newObject, event, existingObject);
+    var result = service.updateObject(newObject, type, existingObject);
 
     // Then
     if (newIsResult) {
@@ -104,13 +104,13 @@ class UpdateServiceTest {
     var newObject = mapper.readValue(
         TestUtils.loadResourceFile("updateService/test-object-image-additional-other.json"),
         OpenDSWrapper.class);
-    given(event.getType()).willReturn("eu.dissco.enrichment.response.event");
+    var type = "eu.dissco.enrichment.response.event";
     var expected = mapper.readValue(
         TestUtils.loadResourceFile("updateService/test-object-image-additional-combined.json"),
         OpenDSWrapper.class);
 
     // When
-    var result = service.updateObject(newObject, event, existingObject);
+    var result = service.updateObject(newObject, type, existingObject);
 
     // Then
     assertThat(result).isEqualTo(expected);
@@ -126,10 +126,10 @@ class UpdateServiceTest {
         OpenDSWrapper.class);
     var newObject = mapper.readValue(TestUtils.loadResourceFile(newJson),
         OpenDSWrapper.class);
-    given(event.getType()).willReturn("eu.dissco.translator.event");
+    var type = "eu.dissco.translator.event";
 
     // When
-    var result = service.updateObject(newObject, event, existingObject);
+    var result = service.updateObject(newObject, type, existingObject);
 
     // Then
     if (newIsResult) {

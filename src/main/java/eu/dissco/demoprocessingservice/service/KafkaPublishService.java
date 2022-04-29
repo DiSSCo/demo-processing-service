@@ -1,6 +1,7 @@
 package eu.dissco.demoprocessingservice.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
 import eu.dissco.demoprocessingservice.properties.ApplicationProperties;
@@ -28,7 +29,26 @@ public class KafkaPublishService {
   private final ApplicationProperties applicationProperties;
 
   public void sendMessage(OpenDSWrapper openDSWrapper, String topic) {
-    var event = createCloudEvent(openDSWrapper);
+    try {
+      var data = mapper.writeValueAsBytes(openDSWrapper);
+      var event = createCloudEvent(data);
+      publishMessage(event, topic);
+    } catch (JsonProcessingException e) {
+      log.error("Unable to deserialize the object: {}", openDSWrapper);
+    }
+  }
+
+  public void sendMessage(JsonNode node, String topic) {
+    try {
+      var data = mapper.writeValueAsBytes(node);
+      var event = createCloudEvent(data);
+      publishMessage(event, topic);
+    } catch (JsonProcessingException e) {
+      log.error("Unable to deserialize the object: {}", node);
+    }
+  }
+
+  private void publishMessage(CloudEvent event, String topic) {
     ListenableFuture<SendResult<String, CloudEvent>> future = kafkaTemplate.send(topic, event);
     future.addCallback(new ListenableFutureCallback<>() {
 
@@ -44,20 +64,15 @@ public class KafkaPublishService {
     });
   }
 
-  private CloudEvent createCloudEvent(OpenDSWrapper openDSWrapper) {
-    try {
-      return CloudEventBuilder.v1()
-          .withId(UUID.randomUUID().toString())
-          .withType(applicationProperties.getEventType())
-          .withSource(URI.create(applicationProperties.getEndpoint()))
-          .withSubject(applicationProperties.getServiceName())
-          .withTime(OffsetDateTime.now(ZoneOffset.UTC))
-          .withDataContentType("application/json")
-          .withData(mapper.writeValueAsBytes(openDSWrapper))
-          .build();
-    } catch (JsonProcessingException e) {
-      log.error("Unable to deserialize the object: {}", openDSWrapper);
-    }
-    return null;
+  private CloudEvent createCloudEvent(byte[] data) {
+    return CloudEventBuilder.v1()
+        .withId(UUID.randomUUID().toString())
+        .withType(applicationProperties.getEventType())
+        .withSource(URI.create(applicationProperties.getEndpoint()))
+        .withSubject(applicationProperties.getServiceName())
+        .withTime(OffsetDateTime.now(ZoneOffset.UTC))
+        .withDataContentType("application/json")
+        .withData(data)
+        .build();
   }
 }
