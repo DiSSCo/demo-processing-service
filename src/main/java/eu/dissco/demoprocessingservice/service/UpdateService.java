@@ -3,7 +3,6 @@ package eu.dissco.demoprocessingservice.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.demoprocessingservice.domain.Image;
 import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
-import io.cloudevents.CloudEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,11 +15,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class UpdateService {
 
-  public OpenDSWrapper updateObject(OpenDSWrapper newObject, CloudEvent message,
+  public OpenDSWrapper updateObject(OpenDSWrapper newObject, String eventType,
       OpenDSWrapper existingObject) {
     log.debug("Objects are not equal, update existing object");
     var finalObject = new OpenDSWrapper();
-    if (message.getType().equals("eu.dissco.translator.event")) {
+    if (eventType.equals("eu.dissco.translator.event")) {
       updateAuthoratitySection(newObject, existingObject, finalObject);
     } else {
       finalObject.setAuthoritative(existingObject.getAuthoritative());

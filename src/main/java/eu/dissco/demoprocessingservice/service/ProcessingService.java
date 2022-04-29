@@ -84,7 +84,7 @@ public class ProcessingService {
       log.debug("Objects are equal, no action needed");
       return CompletableFuture.completedFuture(null);
     } else {
-      var object = updateService.updateObject(newObject, message, existingObject);
+      var object = updateService.updateObject(newObject, message.getType(), existingObject);
       var json = validate(object);
       return CompletableFuture.completedFuture(
           wrapJson(json, existingObjectOptional.get("id")));

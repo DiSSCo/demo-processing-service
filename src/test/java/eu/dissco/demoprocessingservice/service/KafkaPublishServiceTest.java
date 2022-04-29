@@ -37,7 +37,7 @@ class KafkaPublishServiceTest {
   private ListenableFuture<SendResult<String, CloudEvent>> listenableFuture;
   @Mock
   private SendResult<String, CloudEvent> sendResult;
-  private ApplicationProperties properties = new ApplicationProperties();
+  private final ApplicationProperties properties = new ApplicationProperties();
   private KafkaPublishService service;
 
   @BeforeEach

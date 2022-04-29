@@ -10,6 +10,20 @@ Collects the JsonSchema from Cordra to preform JsonSchema validation on the obje
 Uses the Rest client of Cordra as the performance is much better than the DOIP interface (see https://github.com/DiSSCo/demo-performance-cordra).
 For the web applications it will return the newly created object and it also provides a couple of search endpoints.
 
+### Kafka profile
+The Kafka profile receives Cloud Event from a queue.
+It uses Kafka batches to batch data together for the use of the Cordra batch endpoint.
+Together with the Async processing this enhances performance significantly.
+Be aware that when the same object is available multiple times in one batch only the first will be processed, the others will be send back to the queue.
+This process will be repeated until all updates on the instance are processed.
+
+### Web profile
+The Web profile was build to create direct response to a request (sync processing).
+This way a user or another application (such as OpenRefine) can get direct feedback on their operation.
+This endpoint is for use of small datasets only and handle only one item for create/update per call (no batches).
+It has some search/query endpoints as well to enable this, so that user don't have to call two separate endpoints (processing and cordra).
+All request need to be authenticated.
+
 ## Parameter explanation
 Parameters should be supplied as environmental arguments.
 Application is expected to run as a docker container or kubernetes job.
@@ -18,7 +32,7 @@ Running als commandline application will require code changes (when providing th
 ### Profiles
 `spring.profiles.active` This determines which profile the application will run with. There are two options:
 - `kafka` Which uses a kafka consumer on the queue
-- `web` Which runs a web application with REST endpoints
+- `web` Which runs a web application with REST endpoints, the create endpoint only expects one OpenDS per call
 
 ### Cordra parameters
 `cordra.username` This parameter needs to be the username of a user with sufficient authorization to create objects   

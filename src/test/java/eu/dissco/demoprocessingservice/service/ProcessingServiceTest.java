@@ -101,7 +101,7 @@ class ProcessingServiceTest {
     given(properties.getType()).willReturn("ODStypeV0.2-Test");
     var json = (ObjectNode) mapper.readTree(loadResourceFile("test-object-full.json"));
     json.put("id", "test/eab36efab0bf0e60dfe0");
-    given(updateService.updateObject(any(OpenDSWrapper.class), any(CloudEvent.class),
+    given(updateService.updateObject(any(OpenDSWrapper.class), anyString(),
         any(OpenDSWrapper.class))).willReturn(
         mapper.readValue(TestUtils.loadResourceFile("updateService/test-object.json"),
             OpenDSWrapper.class));
