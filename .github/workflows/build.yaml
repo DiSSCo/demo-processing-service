@@ -45,10 +45,10 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ steps.ecr-login.outputs.registry }}/${{ github.event.repository.name }}
+          images: public.ecr.aws/m8w1i6p4/${{ github.event.repository.name }}
           tags: |
             type=sha
-#            type=raw,value=latest
+            type=raw,value=latest
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
