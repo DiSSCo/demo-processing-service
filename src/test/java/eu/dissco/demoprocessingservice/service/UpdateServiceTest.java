@@ -1,7 +1,6 @@
 package eu.dissco.demoprocessingservice.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.demoprocessingservice.domain.OpenDSWrapper;
@@ -30,7 +29,6 @@ class UpdateServiceTest {
 
   private static Stream<Arguments> testEnrichmentUpdates() {
     return Stream.of(
-        Arguments.of("updateService/test-object.json", "updateService/test-object.json", true),
         Arguments.of("updateService/test-object-no-image.json", "updateService/test-object.json",
             true),
         Arguments.of("updateService/test-object.json", "updateService/test-object-no-image.json",
@@ -43,8 +41,6 @@ class UpdateServiceTest {
             "updateService/test-object-image-additional.json", true),
         Arguments.of("updateService/test-object-image-additional.json",
             "updateService/test-object.json", false),
-        Arguments.of("updateService/test-object-image-additional.json",
-            "updateService/test-object-image-additional.json", true),
         Arguments.of("updateService/test-object-image-additional.json",
             "updateService/test-object-image-additional-updated.json", true),
         Arguments.of("updateService/test-object.json",
@@ -61,8 +57,6 @@ class UpdateServiceTest {
         Arguments.of("updateService/test-object-unmapped.json", "updateService/test-object.json",
             false),
         Arguments.of("updateService/test-object-unmapped.json",
-            "updateService/test-object-unmapped.json", false),
-        Arguments.of("updateService/test-object-unmapped.json",
             "updateService/test-object-updated-unmapped.json", true)
     );
   }
@@ -77,8 +71,7 @@ class UpdateServiceTest {
   void testEnrichmentUpdates(String existingJson, String newJson, boolean newIsResult)
       throws IOException {
     // Given
-    var existingObject = mapper.readValue(
-        TestUtils.loadResourceFile(existingJson),
+    var existingObject = mapper.readValue(TestUtils.loadResourceFile(existingJson),
         OpenDSWrapper.class);
     var newObject = mapper.readValue(TestUtils.loadResourceFile(newJson),
         OpenDSWrapper.class);
@@ -121,8 +114,7 @@ class UpdateServiceTest {
   void testAuthoratativeUpdates(String existingJson, String newJson, boolean newIsResult)
       throws IOException {
     // Given
-    var existingObject = mapper.readValue(
-        TestUtils.loadResourceFile(existingJson),
+    var existingObject = mapper.readValue(TestUtils.loadResourceFile(existingJson),
         OpenDSWrapper.class);
     var newObject = mapper.readValue(TestUtils.loadResourceFile(newJson),
         OpenDSWrapper.class);

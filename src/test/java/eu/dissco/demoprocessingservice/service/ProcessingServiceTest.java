@@ -43,7 +43,7 @@ class ProcessingServiceTest {
   @Test
   void testHandleMessages() throws IOException {
     // Given
-    var givenEvent = TestUtils.createCloudEvent(loadResourceFile("test-object-full.json"));
+    var givenEvent = TestUtils.createCloudEvent(loadResourceFile("events/event.json"));
     given(repository.digitalSpecimen(any())).willReturn(List.of());
     given(properties.getDsType()).willReturn("TestType");
 
