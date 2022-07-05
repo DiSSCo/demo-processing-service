@@ -17,6 +17,9 @@ public class UpdateService {
 
   public OpenDSWrapper updateObject(OpenDSWrapper newObject, String eventType,
       OpenDSWrapper existingObject) {
+    if (newObject.equals(existingObject)){
+      return null;
+    }
     log.debug("Objects are not equal, update existing object");
     var finalObject = new OpenDSWrapper();
     if (eventType.equals("eu.dissco.translator.event")) {
@@ -26,6 +29,8 @@ public class UpdateService {
       finalObject.setUnmapped(existingObject.getUnmapped());
     }
     finalObject.setImages(getUpdatedImages(newObject, existingObject));
+    finalObject.setId(existingObject.getId());
+    finalObject.setType(existingObject.getType());
 
     return finalObject;
   }
@@ -56,10 +61,10 @@ public class UpdateService {
   private List<Image> getUpdatedImages(OpenDSWrapper newObject, OpenDSWrapper existingObject) {
     if (existingObject.getImages() == null && newObject.getImages() != null) {
       return newObject.getImages();
-    } else if (existingObject.getImages() != null && newObject.getImages() == null) {
+    } else if ((existingObject.getImages() != null && newObject.getImages() == null) || (
+        existingObject.getImages() == null && newObject.getImages() == null)) {
       return existingObject.getImages();
-    }
-    if (existingObject.getImages().equals(newObject.getImages())) {
+    } else if (existingObject.getImages().equals(newObject.getImages())) {
       // Images are equal no changes have been made
       return existingObject.getImages();
     }
@@ -115,7 +120,7 @@ public class UpdateService {
     var finalList = new ArrayList<JsonNode>();
     for (var newAdditionalInfo : newAdditionalInfoMap.entrySet()) {
       if (existingAdditionalInfoMap.containsKey(newAdditionalInfo.getKey())) {
-        // Assume last update is of highest quality
+        // Assume last update is of the highest quality
         finalList.add(newAdditionalInfo.getValue());
       } else {
         // Additional info not yet present

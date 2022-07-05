@@ -16,29 +16,31 @@ spec:
     spec:
       containers:
         - name: demo-processing-service
-          image: leeflangjs/demo-processing-service
+          image: public.ecr.aws/dissco/demo-processing-service
           imagePullPolicy: Always
           ports:
             - containerPort: 80
           env:
-            - name: cordra.host
-              value: http://cordra-service:8443
-            - name: cordra.username
+            - name: spring.datasource.url
               value:
-            - name: cordra.password
+            - name: spring.datasource.username
               value:
-            - name: cordra.type
-              value: ODStypeV0.2-Demo
+            - name: spring.datasource.password
+              value:
             - name: spring.profiles.active
-              value: kafka
+              value:
             - name: kafka.consumer.host
-              value: kafka.kafka.svc.cluster.local:9092
+              value:
             - name: kafka.consumer.group
-              value: group
+              value:
             - name: kafka.consumer.topic
-              value: topic-multi
+              value:
             - name: kafka.publisher.host
-              value: kafka.kafka.svc.cluster.local:9092
+              value:
+            - name: elasticsearch.hostname
+              value:
+            - name: elasticsearch.port
+              value:
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
@@ -49,7 +51,7 @@ metadata:
   name: processing-service-scaled-object
 spec:
   scaleTargetRef:
-    name:          demo-processing-service
+    name: demo-processing-service
   minReplicaCount: 0
   maxReplicaCount:  1
   triggers:

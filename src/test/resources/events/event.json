@@ -1,0 +1,79 @@
+{
+  "openDS": {
+    "ods:authoritative": {
+      "ods:midsLevel": 1,
+      "ods:curatedObjectID": "https://data.biodiversitydata.nl/naturalis/specimen/RMNH.RENA.7935",
+      "ods:physicalSpecimenId": "RMNH.RENA.7935",
+      "ods:institution": "Naturalis Biodiversity Center",
+      "ods:name": "Tomistoma schlegelii (Müller, 1838) second",
+      "ods:materialType": "PreservedSpecimen"
+    },
+    "ods:images": [
+      {
+        "ods:imageURI": "https://medialib.naturalis.nl/file/id/RMNH.RENA.7935_7/format/large"
+      },
+      {
+        "ods:imageURI": "https://medialib.naturalis.nl/file/id/RMNH.RENA.7935_3/format/large"
+      },
+      {
+        "ods:imageURI": "https://medialib.naturalis.nl/file/id/RMNH.RENA.7935_5/format/large"
+      },
+      {
+        "ods:imageURI": "https://medialib.naturalis.nl/file/id/RMNH.RENA.7935_9/format/large"
+      },
+      {
+        "ods:imageURI": "https://medialib.naturalis.nl/file/id/RMNH.RENA.7935_1/format/large"
+      },
+      {
+        "ods:imageURI": "https://medialib.naturalis.nl/file/id/RMNH.RENA.7935_8/format/large"
+      },
+      {
+        "ods:imageURI": "https://medialib.naturalis.nl/file/id/RMNH.RENA.7935_2/format/large"
+      },
+      {
+        "ods:imageURI": "https://medialib.naturalis.nl/file/id/RMNH.RENA.7935_4/format/large"
+      },
+      {
+        "ods:imageURI": "https://medialib.naturalis.nl/file/id/RMNH.RENA.7935_10/format/large"
+      },
+      {
+        "ods:imageURI": "https://medialib.naturalis.nl/file/id/RMNH.RENA.7935_HL_11/format/large"
+      },
+      {
+        "ods:imageURI": "https://medialib.naturalis.nl/file/id/RMNH.RENA.7935_11/format/large"
+      }
+    ],
+    "ods:unmapped": {
+      "class": "Reptilia",
+      "country": "Indonesia",
+      "scientificNameAuthorship": "(Müller, 1838)",
+      "specificEpithet": "schlegelii",
+      "modified": "2020/09/29",
+      "nomenclaturalCode": "ICZN",
+      "individualCount": "1",
+      "genus": "Tomistoma",
+      "geodeticDatum": "WGS84",
+      "rightsHolder": "Naturalis Biodiversity Center",
+      "higherClassification": "Reptilia|Crocodylia|Crocodylidae",
+      "collectionCode": "Amphibia and Reptilia",
+      "family": "Crocodylidae",
+      "verbatimEventDate": "00-00-1837",
+      "order": "Crocodylia",
+      "license": "CC0 1.0",
+      "preparations": "air dried",
+      "taxonRank": "species",
+      "locality": "Borneo, \"lake Lamoeda, 8days upstream riv.Doeson\"",
+      "recordedBy": "Müller S."
+    }
+  },
+  "enrichment": [
+    {
+      "name": "image_metadata",
+      "imageOnly": true
+    },
+    {
+      "name": "dariah_demo",
+      "imageOnly": false
+    }
+  ]
+}
