@@ -16,21 +16,13 @@ spec:
     spec:
       containers:
         - name: demo-processing-service-web
-          image: leeflangjs/demo-processing-service:end-user-demo
+          image: public.ecr.aws/dissco/demo-processing-service
           imagePullPolicy: Always
           ports:
             - containerPort: 80
           env:
-            - name: cordra.host
-              value: http://cordra-service:8443
-            - name: cordra.username
-              value:
-            - name: cordra.password
-              value:
-            - name: cordra.type
-              value: ODStypeV0.2-Demo
             - name: kafka.publisher.host
-              value: kafka.kafka.svc.cluster.local:9092
+              value:
             - name: spring.profiles.active
               value: web
             - name: keycloak.auth-server-url
@@ -38,6 +30,16 @@ spec:
             - name: keycloak.realm
               value:
             - name: keycloak.resource
+              value:
+            - name: spring.datasource.url
+              value:
+            - name: spring.datasource.username
+              value:
+            - name: spring.datasource.password
+              value:
+            - name: elasticsearch.hostname
+              value:
+            - name: elasticsearch.port
               value:
           securityContext:
             runAsNonRoot: true
