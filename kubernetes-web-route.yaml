@@ -18,7 +18,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`kubernetes.demo.nsidr.org`) && PathPrefix(`/opends`)
+    - match: Host(`sandbox.dissco.tech`) && PathPrefix(`/opends`)
       kind: Rule
       services:
         - name: demo-processing-service-web-service

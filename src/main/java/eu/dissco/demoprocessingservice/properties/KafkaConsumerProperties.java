@@ -25,6 +25,6 @@ public class KafkaConsumerProperties {
   private String topic;
 
   @Positive
-  private int batchSize = 500;
+  private int batchSize = 5000;
 
 }

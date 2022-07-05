@@ -15,4 +15,6 @@ public class ApplicationProperties {
 
   private String endpoint = "https://www.dissco.eu/";
 
+  private String dsType = "ODStypeV0.2-Demo";
+
 }
