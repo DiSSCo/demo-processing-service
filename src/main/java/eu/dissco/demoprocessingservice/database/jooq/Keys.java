@@ -5,8 +5,10 @@ package eu.dissco.demoprocessingservice.database.jooq;
 
 
 import eu.dissco.demoprocessingservice.database.jooq.tables.DigitalSpecimen;
+import eu.dissco.demoprocessingservice.database.jooq.tables.Handles;
 import eu.dissco.demoprocessingservice.database.jooq.tables.MediaObject;
 import eu.dissco.demoprocessingservice.database.jooq.tables.records.DigitalSpecimenRecord;
+import eu.dissco.demoprocessingservice.database.jooq.tables.records.HandlesRecord;
 import eu.dissco.demoprocessingservice.database.jooq.tables.records.MediaObjectRecord;
 
 import org.jooq.ForeignKey;
@@ -28,6 +30,7 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final UniqueKey<DigitalSpecimenRecord> DIGITAL_SPECIMEN_PKEY = Internal.createUniqueKey(DigitalSpecimen.DIGITAL_SPECIMEN, DSL.name("digital_specimen_pkey"), new TableField[] { DigitalSpecimen.DIGITAL_SPECIMEN.ID }, true);
+    public static final UniqueKey<HandlesRecord> HANDLES_PKEY = Internal.createUniqueKey(Handles.HANDLES, DSL.name("handles_pkey"), new TableField[] { Handles.HANDLES.HANDLE, Handles.HANDLES.IDX }, true);
     public static final UniqueKey<MediaObjectRecord> MEDIA_OBJECT_PKEY = Internal.createUniqueKey(MediaObject.MEDIA_OBJECT, DSL.name("media_object_pkey"), new TableField[] { MediaObject.MEDIA_OBJECT.ID }, true);
 
     // -------------------------------------------------------------------------

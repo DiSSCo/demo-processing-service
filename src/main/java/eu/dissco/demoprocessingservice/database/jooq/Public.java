@@ -5,6 +5,7 @@ package eu.dissco.demoprocessingservice.database.jooq;
 
 
 import eu.dissco.demoprocessingservice.database.jooq.tables.DigitalSpecimen;
+import eu.dissco.demoprocessingservice.database.jooq.tables.Handles;
 import eu.dissco.demoprocessingservice.database.jooq.tables.MediaObject;
 
 import java.util.Arrays;
@@ -34,6 +35,11 @@ public class Public extends SchemaImpl {
     public final DigitalSpecimen DIGITAL_SPECIMEN = DigitalSpecimen.DIGITAL_SPECIMEN;
 
     /**
+     * The table <code>public.handles</code>.
+     */
+    public final Handles HANDLES = Handles.HANDLES;
+
+    /**
      * The table <code>public.media_object</code>.
      */
     public final MediaObject MEDIA_OBJECT = MediaObject.MEDIA_OBJECT;
@@ -55,6 +61,7 @@ public class Public extends SchemaImpl {
     public final List<Table<?>> getTables() {
         return Arrays.<Table<?>>asList(
             DigitalSpecimen.DIGITAL_SPECIMEN,
+            Handles.HANDLES,
             MediaObject.MEDIA_OBJECT);
     }
 }

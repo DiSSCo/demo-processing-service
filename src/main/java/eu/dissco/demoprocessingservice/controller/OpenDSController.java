@@ -47,7 +47,7 @@ public class OpenDSController {
       log.error("No need to update the object, it is already in object storage");
       return ResponseEntity.status(HttpStatus.NOT_MODIFIED).build();
     } else {
-      return ResponseEntity.ok(result.get(0));
+      return ResponseEntity.ok(result.get(0).openDS());
     }
   }
 

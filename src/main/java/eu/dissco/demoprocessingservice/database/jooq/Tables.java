@@ -5,6 +5,7 @@ package eu.dissco.demoprocessingservice.database.jooq;
 
 
 import eu.dissco.demoprocessingservice.database.jooq.tables.DigitalSpecimen;
+import eu.dissco.demoprocessingservice.database.jooq.tables.Handles;
 import eu.dissco.demoprocessingservice.database.jooq.tables.MediaObject;
 
 
@@ -18,6 +19,11 @@ public class Tables {
      * The table <code>public.digital_specimen</code>.
      */
     public static final DigitalSpecimen DIGITAL_SPECIMEN = DigitalSpecimen.DIGITAL_SPECIMEN;
+
+    /**
+     * The table <code>public.handles</code>.
+     */
+    public static final Handles HANDLES = Handles.HANDLES;
 
     /**
      * The table <code>public.media_object</code>.

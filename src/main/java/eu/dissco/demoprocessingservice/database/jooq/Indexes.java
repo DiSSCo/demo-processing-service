@@ -5,6 +5,7 @@ package eu.dissco.demoprocessingservice.database.jooq;
 
 
 import eu.dissco.demoprocessingservice.database.jooq.tables.DigitalSpecimen;
+import eu.dissco.demoprocessingservice.database.jooq.tables.Handles;
 
 import org.jooq.Index;
 import org.jooq.OrderField;
@@ -22,5 +23,7 @@ public class Indexes {
     // INDEX definitions
     // -------------------------------------------------------------------------
 
+    public static final Index DATAINDEX = Internal.createIndex(DSL.name("dataindex"), Handles.HANDLES, new OrderField[] { Handles.HANDLES.DATA }, false);
+    public static final Index HANDLEINDEX = Internal.createIndex(DSL.name("handleindex"), Handles.HANDLES, new OrderField[] { Handles.HANDLES.HANDLE }, false);
     public static final Index PHYSICAL_ID_INDEX = Internal.createIndex(DSL.name("physical_id_index"), DigitalSpecimen.DIGITAL_SPECIMEN, new OrderField[] { DigitalSpecimen.DIGITAL_SPECIMEN.CURATED_OBJECT_ID, DigitalSpecimen.DIGITAL_SPECIMEN.OBJECT_TYPE }, false);
 }
